@@ -6,9 +6,9 @@ const connectDB = require("./config/db");
 
 const authRoutes = require("./routes/authRoutes");
 const blogPostRoutes = require("./routes/blogPostRoutes");
-// const commensRoutes = require("./routes/commentRoutes");
-// const dashboardRoutes = require("./routes/dashboardRoutes");
-// const aiRoutes = require("./routes/aiRoutes");
+const commentsRoutes = require("./routes/commentRoutes");
+const dashboardRoutes = require("./routes/dashboardRoutes");
+const aiRoutes = require("./routes/aiRoutes");
 
 const app = express();
 
@@ -30,10 +30,9 @@ app.use(express.json());
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/posts", blogPostRoutes);
-// app.use("/api/comments", commensRoutes);
-// app.use("/api/dashboard-summary", dashboardRoutes);
-
-// app.use("/api/ai", aiRoutes);
+app.use("/api/comments", commentsRoutes);
+app.use("/api/dashboard-summary", dashboardRoutes);
+app.use("/api/ai", aiRoutes);
 
 // Server Uploads folder
 app.use("/uploads", express.static(path.join(__dirname, "uploads"), {}));
