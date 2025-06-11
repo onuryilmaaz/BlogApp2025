@@ -2,20 +2,25 @@ import { BLOG_NAVBAR_DATA, SIDE_MENU_DATA } from "../../utils/data";
 import { LuLogOut } from "react-icons/lu";
 import { useNavigate } from "react-router-dom";
 import CharAvatar from "../Cards/CharAvatar";
+import { useContext } from "react";
+import { UserContext } from "../../context/userContext";
 
-const SideMenu = ({ activeMenu, isBlogMenu }) => {
-  const user = null;
+const SideMenu = ({ activeMenu, isBlogMenu, setOpenSideMenu }) => {
+  const { user, setUser } = useContext(UserContext);
   const navigate = useNavigate();
   const handleClick = (route) => {
     if (route === "logout") {
       handleLogout();
       return;
     }
+    setOpenSideMenu((prevState) => !prevState);
     navigate(route);
   };
   const handleLogout = () => {
     localStorage.clear();
+    setUser(null);
     navigate("/");
+    setOpenSideMenu((prevState) => !prevState);
   };
   return (
     <div className="w-64 h-[calc(100vh-61px)] bg-white border-r border-gray-200/50 p-5 sticky top-[61px] z20">

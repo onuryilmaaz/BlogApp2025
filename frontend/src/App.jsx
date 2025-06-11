@@ -12,42 +12,45 @@ import BlogPostEditor from "./pages/Admin/BlogPostEditor";
 import Comments from "./pages/Admin/Comments";
 
 import PrivateRoute from "./routes/PrivateRoute";
+import UserProvider from "./context/userContext";
 
 const App = () => {
   return (
-    <div>
-      <Router>
-        <Routes>
-          {/* Default Route */}
-          <Route path="/" element={<BlogLandingPage />} />
-          <Route path="/:slug" element={<BlogPostView />} />
-          <Route path="/tag/:tageName" element={<PostByTags />} />
-          <Route path="/search" element={<SearchPosts />} />
+    <UserProvider>
+      <div>
+        <Router>
+          <Routes>
+            {/* Default Route */}
+            <Route path="/" element={<BlogLandingPage />} />
+            <Route path="/:slug" element={<BlogPostView />} />
+            <Route path="/tag/:tageName" element={<PostByTags />} />
+            <Route path="/search" element={<SearchPosts />} />
 
-          {/* Admin Routes */}
-          <Route element={<PrivateRoute allowedRoles={["Admin"]} />} />
-          <Route path="/admin/dashboard" element={<Dashboard />} />
-          <Route path="/admin/posts" element={<BlogPosts />} />
-          <Route path="/admin/create" element={<BlogPostEditor />} />
-          <Route
-            path="/admin/edit/:postSlug"
-            element={<BlogPostEditor isEdit={true} />}
-          />
-          <Route path="/admin/commenst" element={<Comments />} />
-          <Route />
+            {/* Admin Routes */}
+            <Route element={<PrivateRoute allowedRoles={["Admin"]} />} />
+            <Route path="/admin/dashboard" element={<Dashboard />} />
+            <Route path="/admin/posts" element={<BlogPosts />} />
+            <Route path="/admin/create" element={<BlogPostEditor />} />
+            <Route
+              path="/admin/edit/:postSlug"
+              element={<BlogPostEditor isEdit={true} />}
+            />
+            <Route path="/admin/commenst" element={<Comments />} />
+            <Route />
 
-          <Route path="/admin-login" element={<AdminLogin />} />
-        </Routes>
-      </Router>
-      <Toaster
-        toastOptions={{
-          className: "",
-          style: {
-            fontSize: "13px",
-          },
-        }}
-      />
-    </div>
+            <Route path="/admin-login" element={<AdminLogin />} />
+          </Routes>
+        </Router>
+        <Toaster
+          toastOptions={{
+            className: "",
+            style: {
+              fontSize: "13px",
+            },
+          }}
+        />
+      </div>
+    </UserProvider>
   );
 };
 
