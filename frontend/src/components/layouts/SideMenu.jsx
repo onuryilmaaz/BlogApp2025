@@ -13,6 +13,9 @@ const SideMenu = ({ activeMenu, isBlogMenu, setOpenSideMenu }) => {
       handleLogout();
       return;
     }
+
+    
+
     setOpenSideMenu((prevState) => !prevState);
     navigate(route);
   };
