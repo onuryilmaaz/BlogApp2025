@@ -35,7 +35,7 @@ const App = () => {
               path="/admin/edit/:postSlug"
               element={<BlogPostEditor isEdit={true} />}
             />
-            <Route path="/admin/commenst" element={<Comments />} />
+            <Route path="/admin/comments" element={<Comments />} />
             <Route />
 
             <Route path="/admin-login" element={<AdminLogin />} />

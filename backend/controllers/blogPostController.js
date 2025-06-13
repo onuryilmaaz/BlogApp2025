@@ -121,7 +121,7 @@ const getAllPosts = async (req, res) => {
       counts: {
         all: allCount,
         published: publishedCount,
-        dratf: draftCount,
+        draft: draftCount,
       },
     });
   } catch (error) {
