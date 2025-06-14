@@ -23,7 +23,7 @@ const App = () => {
             {/* Default Route */}
             <Route path="/" element={<BlogLandingPage />} />
             <Route path="/:slug" element={<BlogPostView />} />
-            <Route path="/tag/:tageName" element={<PostByTags />} />
+            <Route path="/tag/:tagName" element={<PostByTags />} />
             <Route path="/search" element={<SearchPosts />} />
 
             {/* Admin Routes */}
@@ -45,7 +45,7 @@ const App = () => {
           toastOptions={{
             className: "",
             style: {
-              fontSize: "13px",
+              fontSize: "15px",
             },
           }}
         />

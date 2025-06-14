@@ -20,7 +20,9 @@ const Navbar = ({ activeMenu }) => {
           <HiOutlineMenu className="text-2xl" />
         )}
       </button>
-      <img src={LOGO} alt="logo" className="h-[24px] md:h-[26px]" />
+      <a href="/">
+        <img src={LOGO} alt="logo" className="h-[24px] md:h-[26px]" />
+      </a>
       {openSideMenu && (
         <div className="fixed top-[61px] -ml-4 bg-white">
           <SideMenu activeMenu={activeMenu} setOpenSideMenu={setOpenSideMenu} />
