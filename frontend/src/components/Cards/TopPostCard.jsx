@@ -1,34 +1,48 @@
-import { LuHeart } from "react-icons/lu";
+import { LuHeart, LuFileText } from "react-icons/lu";
 
 const TopPostCard = ({ title, coverImageUrl, views, likes, maxViews }) => {
   const viewPercentage = ((views / maxViews) * 100).toFixed(0);
+
   return (
     <div className="bg-white py-4 flex flex-col gap-3 border-b border-gray-100">
       <div className="flex items-start gap-2">
-        <img
-          src={coverImageUrl}
-          alt={title}
-          className="w-10 h-10 rounded-md object-cover "
-        />
-        <h3 className="text-sm font-medium text-gray-800 line-clamp-2">
-          {" "}
-          {title}{" "}
+        <div className="w-10 h-10 rounded-md bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0">
+          {coverImageUrl ? (
+            <img
+              src={coverImageUrl}
+              alt={title || "Post"}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.target.style.display = "none";
+                e.target.nextSibling.style.display = "flex";
+              }}
+            />
+          ) : null}
+          <LuFileText
+            className="text-gray-400 text-lg"
+            style={{ display: coverImageUrl ? "none" : "flex" }}
+          />
+        </div>
+
+        <h3 className="text-sm font-medium text-gray-800 line-clamp-2 flex-1">
+          {title || "Untitled Post"}
         </h3>
       </div>
+
       <div className="relative w-full h-1.5 bg-sky-100/60 rounded-full overflow-hidden mt-1">
         <div
           className="h-full bg-gradient-to-r from-sky-50 to-cyan-400 rounded-full transition-all duration-300"
-          style={{ width: `${viewPercentage}%` }}
+          style={{ width: `${Math.min(viewPercentage, 100)}%` }}
         ></div>
       </div>
+
       <div className="flex items-center justify-between text-xs text-gray-600">
         <span className="flex items-center gap-1 text-sm text-black">
-          {views} views
+          {(views || 0).toLocaleString()} views
         </span>
         <span className="flex items-center gap-1 text-sm text-black">
-          {" "}
           <LuHeart className="text-[16px] text-gray-500" />
-          {likes} likes
+          {(likes || 0).toLocaleString()} likes
         </span>
       </div>
     </div>

@@ -1,6 +1,6 @@
-import { useContext, useState } from "react";
+import { useState } from "react";
 import { LuChevronDown, LuDot, LuReply, LuTrash2 } from "react-icons/lu";
-import { UserContext } from "../../context/userContext";
+import useUserStore from "../../stores/userStore";
 import moment from "moment";
 import CommentReplyInput from "../Inputs/CommentReplyInput";
 import axiosInstance from "../../utils/axiosInstance";
@@ -11,6 +11,7 @@ const CommentInfoCard = ({
   commentId,
   authorName,
   authorPhoto,
+  authorId,
   content,
   updatedOn,
   post,
@@ -19,7 +20,7 @@ const CommentInfoCard = ({
   onDelete,
   isSubReply,
 }) => {
-  const { user } = useContext(UserContext);
+  const user = useUserStore((state) => state.user);
 
   const [replyText, setReplyText] = useState("");
   const [showReplyForm, setShowReplyForm] = useState(false);
@@ -99,12 +100,15 @@ const CommentInfoCard = ({
                     </button>{" "}
                   </>
                 )}
-                <button
-                  className="flex items-center gap-1.5 text-[13px] font-medium text-sky-950 bg-sky-50 px-4 py-0.5 rounded-full hover:bg-rose-500 hover:text-white cursor-pointer"
-                  onClick={() => onDelete()}
-                >
-                  <LuTrash2 /> Delete
-                </button>
+                {/* Only show delete button if user is the author or an admin */}
+                {user && (user._id === authorId || user.role === "Admin") && (
+                  <button
+                    className="flex items-center gap-1.5 text-[13px] font-medium text-sky-950 bg-sky-50 px-4 py-0.5 rounded-full hover:bg-rose-500 hover:text-white cursor-pointer"
+                    onClick={() => onDelete()}
+                  >
+                    <LuTrash2 /> Delete
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -142,8 +146,10 @@ const CommentInfoCard = ({
         replies.map((comment, index) => (
           <div key={comment._id} className={`ml-5 ${index == 0 ? "mt-5" : ""}`}>
             <CommentInfoCard
+              commentId={comment._id}
               authorName={comment.author.name}
               authorPhoto={comment.author.profileImageUrl}
+              authorId={comment.author._id}
               content={comment.content}
               post={comment.post}
               replies={comment.replies || []}

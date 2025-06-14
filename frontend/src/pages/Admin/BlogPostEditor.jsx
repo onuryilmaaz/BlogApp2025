@@ -276,7 +276,7 @@ const BlogPostEditor = ({ isEdit }) => {
                     commands.orderedListCommand,
                     commands.checkedListCommand,
                   ]}
-                  hideMenu={true}
+                  visibleDragBar={false}
                 />
               </div>
             </div>

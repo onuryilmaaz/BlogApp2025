@@ -1,9 +1,10 @@
-import { useContext } from "react";
+import React from "react";
 import { Navigate, Outlet } from "react-router-dom";
-import { UserContext } from "../context/userContext";
+import useUserStore from "../stores/userStore";
 
 const PrivateRoute = ({ allowedRoles }) => {
-  const { user, loading } = useContext(UserContext);
+  const user = useUserStore((state) => state.user);
+  const loading = useUserStore((state) => state.loading);
   if (loading) {
     return <div>Loading...</div>;
   }

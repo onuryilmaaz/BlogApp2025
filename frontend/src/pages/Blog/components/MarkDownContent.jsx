@@ -9,7 +9,7 @@ const MarkDownContent = ({ content }) => {
   if (!content) return null;
   return (
     <div className="">
-      <div className="text-[14px] prose prose-slate dark:prose-invert max-w-none">
+      <div className="text-[15px] prose prose-slate dark:prose-invert max-w-none prose-headings:font-bold prose-headings:text-gray-900 prose-p:text-gray-700 prose-p:leading-relaxed prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline prose-strong:text-gray-900 prose-code:text-pink-600 prose-code:bg-pink-50 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-pre:bg-gray-50 prose-pre:border prose-pre:border-gray-200">
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
           components={{
@@ -34,7 +34,9 @@ const MarkDownContent = ({ content }) => {
               );
             },
             p({ children }) {
-              return <p className="mb-4 leading-[22px}">{children}</p>;
+              return (
+                <p className="mb-4 leading-relaxed text-gray-700">{children}</p>
+              );
             },
             strong({ children }) {
               return <strong>{children}</strong>;
@@ -53,7 +55,11 @@ const MarkDownContent = ({ content }) => {
               );
             },
             li({ children }) {
-              return <li className="mb-2 leading-[22px]">{children}</li>;
+              return (
+                <li className="mb-2 leading-relaxed text-gray-700">
+                  {children}
+                </li>
+              );
             },
             blockquote({ children }) {
               return (
@@ -64,22 +70,30 @@ const MarkDownContent = ({ content }) => {
             },
             h1({ children }) {
               return (
-                <h1 className="text-2xl font-bold mt-6 mb-4">{children}</h1>
+                <h1 className="text-3xl font-bold mt-8 mb-6 text-gray-900 border-b border-gray-200 pb-2">
+                  {children}
+                </h1>
               );
             },
             h2({ children }) {
               return (
-                <h2 className="text-xl font-bold mt-6 mb-3">{children}</h2>
+                <h2 className="text-2xl font-bold mt-8 mb-4 text-gray-900">
+                  {children}
+                </h2>
               );
             },
             h3({ children }) {
               return (
-                <h3 className="text-lg font-bold mt-5 mb-2">{children}</h3>
+                <h3 className="text-xl font-bold mt-6 mb-3 text-gray-900">
+                  {children}
+                </h3>
               );
             },
             h4({ children }) {
               return (
-                <h4 className="text-base font-bold mt-4 mb-2">{children}</h4>
+                <h4 className="text-lg font-bold mt-5 mb-2 text-gray-900">
+                  {children}
+                </h4>
               );
             },
             a({ children, href }) {

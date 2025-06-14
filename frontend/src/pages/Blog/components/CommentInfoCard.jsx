@@ -1,6 +1,6 @@
-import { useContext, useState } from "react";
+import { useState } from "react";
 import { LuChevronDown, LuDot, LuReply, LuTrash2 } from "react-icons/lu";
-import { UserContext } from "../../../context/userContext";
+import useUserStore from "../../../stores/userStore";
 import axiosInstance from "../../../utils/axiosInstance";
 import { API_PATHS } from "../../../utils/apiPaths";
 import toast from "react-hot-toast";
@@ -11,6 +11,7 @@ const CommentInfoCard = ({
   commentId,
   authorName,
   authorPhoto,
+  authorId,
   content,
   updatedOn,
   post,
@@ -19,7 +20,8 @@ const CommentInfoCard = ({
   onDelete,
   isSubReply,
 }) => {
-  const { user, setOpenAuthForm } = useContext(UserContext);
+  const user = useUserStore((state) => state.user);
+  const setOpenAuthForm = useUserStore((state) => state.setOpenAuthForm);
   const [replyText, setReplyText] = useState("");
 
   const [showReplyForm, setShowReplyForm] = useState(false);
@@ -120,8 +122,10 @@ const CommentInfoCard = ({
         replies.map((comment, index) => (
           <div key={comment._id} className={`ml-5 ${index == 0 ? "mt-5" : ""}`}>
             <CommentInfoCard
+              commentId={comment._id}
               authorName={comment.author.name}
               authorPhoto={comment.author.profileImageUrl}
+              authorId={comment.author._id}
               content={comment.content}
               post={comment.post}
               replies={comment.replies || []}

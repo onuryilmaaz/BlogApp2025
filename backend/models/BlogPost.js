@@ -22,4 +22,14 @@ const BlogPostSchema = new mongoose.Schema(
   }
 );
 
+// Add indexes for better query performance
+// Note: slug already has unique index from schema definition
+BlogPostSchema.index({ tags: 1 }); // For tag-based queries
+BlogPostSchema.index({ createdAt: -1 }); // For sorting by date
+BlogPostSchema.index({ views: -1 }); // For trending posts
+BlogPostSchema.index({ likes: -1 }); // For popular posts
+BlogPostSchema.index({ author: 1, createdAt: -1 }); // For author's posts
+BlogPostSchema.index({ isDraft: 1, createdAt: -1 }); // For published posts
+BlogPostSchema.index({ title: "text", content: "text" }); // For text search
+
 module.exports = mongoose.model("BlogPost", BlogPostSchema);

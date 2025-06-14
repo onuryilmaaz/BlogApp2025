@@ -2,11 +2,11 @@ import { BLOG_NAVBAR_DATA, SIDE_MENU_DATA } from "../../utils/data";
 import { LuLogOut } from "react-icons/lu";
 import { useNavigate } from "react-router-dom";
 import CharAvatar from "../Cards/CharAvatar";
-import { useContext } from "react";
-import { UserContext } from "../../context/userContext";
+import useUserStore from "../../stores/userStore";
 
 const SideMenu = ({ activeMenu, isBlogMenu, setOpenSideMenu }) => {
-  const { user, setUser } = useContext(UserContext);
+  const user = useUserStore((state) => state.user);
+  const clearUser = useUserStore((state) => state.clearUser);
   const navigate = useNavigate();
   const handleClick = (route) => {
     if (route === "logout") {
@@ -14,14 +14,12 @@ const SideMenu = ({ activeMenu, isBlogMenu, setOpenSideMenu }) => {
       return;
     }
 
-    
-
     setOpenSideMenu((prevState) => !prevState);
     navigate(route);
   };
   const handleLogout = () => {
     localStorage.clear();
-    setUser(null);
+    clearUser();
     navigate("/");
     setOpenSideMenu((prevState) => !prevState);
   };

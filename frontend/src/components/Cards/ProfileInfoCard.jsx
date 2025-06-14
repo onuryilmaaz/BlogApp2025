@@ -1,9 +1,10 @@
-import { useContext } from "react";
-import { UserContext } from "../../context/userContext";
+import React from "react";
 import { useNavigate } from "react-router-dom";
+import useUserStore from "../../stores/userStore";
 
 const ProfileInfoCard = () => {
-  const { user, clearUser } = useContext(UserContext);
+  const user = useUserStore((state) => state.user);
+  const clearUser = useUserStore((state) => state.clearUser);
   const navigate = useNavigate();
 
   const handleLogout = () => {

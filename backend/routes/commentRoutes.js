@@ -7,10 +7,20 @@ const {
   getAllComments,
 } = require("../controllers/commentController");
 const { protect } = require("../middlewares/authMiddleware");
+const { commentLimiter } = require("../middlewares/rateLimiter");
+const {
+  validateComment,
+  validateMongoId,
+} = require("../middlewares/validation");
 
-router.post("/:postId", protect, addComment);
-router.get("/:postId", getCommentsByPost);
+router.post("/:postId", commentLimiter, protect, validateComment, addComment);
+router.get("/:postId", validateMongoId("postId"), getCommentsByPost);
 router.get("/", getAllComments);
-router.delete("/:commentId", protect, deleteComment);
+router.delete(
+  "/:commentId",
+  protect,
+  validateMongoId("commentId"),
+  deleteComment
+);
 
 module.exports = router;

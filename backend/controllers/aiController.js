@@ -1,11 +1,21 @@
 const { GoogleGenAI } = require("@google/genai");
+const logger = require("../config/logger");
 const {
   blogPostIdeasPrompt,
   generateReplyPrompt,
   blogSummaryPrompt,
 } = require("../utils/prompts");
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+// Initialize AI client with error handling
+let ai;
+try {
+  if (!process.env.GEMINI_API_KEY) {
+    throw new Error("GEMINI_API_KEY environment variable is not set");
+  }
+  ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+} catch (error) {
+  logger.error("Failed to initialize Google GenAI:", error);
+}
 
 // @desc   Generate blog content from title
 // @route  POST /api/ai/generate
@@ -44,6 +54,10 @@ const generateBlogPostIdeas = async (req, res) => {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
+    if (!ai) {
+      return res.status(500).json({ message: "AI service is not available" });
+    }
+
     const prompt = blogPostIdeasPrompt(topics);
 
     const response = await ai.models.generateContent({
@@ -52,15 +66,60 @@ const generateBlogPostIdeas = async (req, res) => {
     });
 
     let rawText = response.text;
+    logger.info(`AI Ideas Response: ${rawText.substring(0, 200)}...`);
 
+    // Clean the response more thoroughly
     const cleanedText = rawText
-      .replace(/^```json\s*/, "")
-      .replace(/```$/, "")
+      .replace(/^```json\s*/i, "")
+      .replace(/```\s*$/i, "")
+      .replace(/^```\s*/i, "")
+      .replace(/```\s*$/i, "")
       .trim();
 
-    const data = JSON.parse(cleanedText);
+    let data;
+    try {
+      data = JSON.parse(cleanedText);
+
+      // Validate the structure
+      if (!Array.isArray(data) || data.length === 0) {
+        throw new Error("Invalid response format: expected non-empty array");
+      }
+
+      // Validate each item
+      data.forEach((item, index) => {
+        if (
+          !item.title ||
+          !item.description ||
+          !Array.isArray(item.tags) ||
+          !item.tone
+        ) {
+          throw new Error(
+            `Invalid item at index ${index}: missing required fields`
+          );
+        }
+      });
+    } catch (parseError) {
+      logger.error("JSON parsing failed:", {
+        rawText,
+        cleanedText,
+        error: parseError.message,
+      });
+
+      // Fallback response
+      data = [
+        {
+          title: "Blog Yazısı Fikirleri",
+          description:
+            "AI yanıtı işlenirken bir hata oluştu.\nLütfen tekrar deneyin.",
+          tags: ["genel", "blog", "yazı"],
+          tone: "günlük",
+        },
+      ];
+    }
+
     res.status(200).json(data);
   } catch (error) {
+    logger.error("Generate blog ideas error:", error);
     res.status(500).json({
       message: "Failed to generate blog post ideas",
       error: error.message,
@@ -107,6 +166,10 @@ const generatePostSummary = async (req, res) => {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
+    if (!ai) {
+      return res.status(500).json({ message: "AI service is not available" });
+    }
+
     const prompt = blogSummaryPrompt(content);
 
     const response = await ai.models.generateContent({
@@ -115,15 +178,46 @@ const generatePostSummary = async (req, res) => {
     });
 
     let rawText = response.text;
+    logger.info(`AI Summary Response: ${rawText.substring(0, 200)}...`);
 
+    // Clean the response more thoroughly
     const cleanedText = rawText
-      .replace(/^```json\s*/, "")
-      .replace(/```$/, "")
+      .replace(/^```json\s*/i, "")
+      .replace(/```\s*$/i, "")
+      .replace(/^```\s*/i, "")
+      .replace(/```\s*$/i, "")
       .trim();
 
-    const data = JSON.parse(cleanedText);
+    let data;
+    try {
+      data = JSON.parse(cleanedText);
+
+      // Validate the structure
+      if (!data.title || !data.summary) {
+        throw new Error("Invalid response format: missing title or summary");
+      }
+
+      // Ensure title is not too long
+      if (data.title.length > 200) {
+        data.title = data.title.substring(0, 200) + "...";
+      }
+    } catch (parseError) {
+      logger.error("JSON parsing failed for summary:", {
+        rawText,
+        cleanedText,
+        error: parseError.message,
+      });
+
+      // Fallback response
+      data = {
+        title: "Blog Yazısı Özeti",
+        summary: "AI yanıtı işlenirken bir hata oluştu. Lütfen tekrar deneyin.",
+      };
+    }
+
     res.status(200).json(data);
   } catch (error) {
+    logger.error("Generate summary error:", error);
     res.status(500).json({
       message: "Failed to generate blog post summary",
       error: error.message,

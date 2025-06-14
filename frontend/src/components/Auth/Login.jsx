@@ -1,63 +1,88 @@
-import { useContext, useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import React, { useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { useMutation } from "@tanstack/react-query";
 import axiosInstance from "../../utils/axiosInstance";
 import { API_PATHS } from "../../utils/apiPaths";
-import { UserContext } from "../../context/userContext";
+import useUserStore from "../../stores/userStore";
+import { loginSchema, validateWithSchema } from "../../lib/schemas";
+import toast from "react-hot-toast";
 
 import AUTH_IMG from "../../assets/auth-img.jpg";
 import Input from "../Inputs/Input";
-import { validateEmail } from "../../utils/helper";
 
-const Login = ({ setCurrentPage }) => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState(null);
+const Login = React.memo(({ setCurrentPage }) => {
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+  const [errors, setErrors] = useState({});
 
-  const { updateUser, setOpenAuthForm } = useContext(UserContext);
+  // Zustand stores
+  const setUser = useUserStore((state) => state.setUser);
+  const setOpenAuthForm = useUserStore((state) => state.setOpenAuthForm);
   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-
-    if (!validateEmail(email)) {
-      setError("Please enter a valid email address");
-      return;
-    }
-
-    if (!password) {
-      setError("Please enter the password");
-      return;
-    }
-
-    setError("");
-
-    // Login API call
-    try {
-      const response = await axiosInstance.post(API_PATHS.AUTH.LOGIN, {
-        email,
-        password,
-      });
-
-      const { token, role } = response.data;
+  // Login mutation
+  const loginMutation = useMutation({
+    mutationFn: async (loginData) => {
+      const response = await axiosInstance.post(
+        API_PATHS.AUTH.LOGIN,
+        loginData
+      );
+      return response.data;
+    },
+    onSuccess: (data) => {
+      const { token, role } = data;
       if (token) {
-        localStorage.setItem("token", token);
-        updateUser(response.data);
+        setUser(data);
+        setOpenAuthForm(false);
 
         if (role === "Admin") {
-          setOpenAuthForm(false);
           navigate("/admin/dashboard");
         }
 
-        setOpenAuthForm(false);
+        toast.success("Login successful!");
       }
-    } catch (error) {
-      if (error.response && error.response.data.message) {
-        setError(error.response.data.message);
-      } else {
-        setError("Something went wrong. Please tyr again");
+    },
+    onError: (error) => {
+      const message =
+        error.response?.data?.message || "Login failed. Please try again.";
+      toast.error(message);
+      setErrors({ general: message });
+    },
+  });
+
+  // Handle input changes
+  const handleInputChange = useCallback(
+    (field, value) => {
+      setFormData((prev) => ({ ...prev, [field]: value }));
+      // Clear field-specific error when user starts typing
+      if (errors[field]) {
+        setErrors((prev) => ({ ...prev, [field]: "" }));
       }
-    }
-  };
+    },
+    [errors]
+  );
+
+  // Handle form submission
+  const handleLogin = useCallback(
+    async (e) => {
+      e.preventDefault();
+
+      // Validate with Zod
+      const validation = validateWithSchema(loginSchema, formData);
+
+      if (!validation.success) {
+        setErrors(validation.errors);
+        return;
+      }
+
+      // Clear errors and submit
+      setErrors({});
+      loginMutation.mutate(validation.data);
+    },
+    [formData, loginMutation]
+  );
   return (
     <div className="flex items-center">
       <div className="w-[90vw] md:w-[33vw] p-7 flex flex-col justify-center">
@@ -68,31 +93,42 @@ const Login = ({ setCurrentPage }) => {
 
         <form onSubmit={handleLogin}>
           <Input
-            value={email}
-            onChange={({ target }) => setEmail(target.value)}
+            value={formData.email}
+            onChange={({ target }) => handleInputChange("email", target.value)}
             label="Email Address"
-            placaholder="john@example.com"
-            type="text"
+            placeholder="john@example.com"
+            type="email"
+            error={errors.email}
           />
           <Input
-            value={password}
-            onChange={({ target }) => setPassword(target.value)}
+            value={formData.password}
+            onChange={({ target }) =>
+              handleInputChange("password", target.value)
+            }
             label="Password"
-            placaholder="Min 8 Characters"
+            placeholder="Min 6 Characters"
             type="password"
+            error={errors.password}
           />
 
-          {error && <p className="text-red-500 text-xs pb-2.5"> {error} </p>}
-          <button type="submit" className="btn-primary">
-            LOGIN
+          {errors.general && (
+            <p className="text-red-500 text-xs pb-2.5">{errors.general}</p>
+          )}
+
+          <button
+            type="submit"
+            className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={loginMutation.isPending}
+          >
+            {loginMutation.isPending ? "LOGGING IN..." : "LOGIN"}
           </button>
+
           <p className="text-[13px] text-slate-800 mt-3">
             Don't have an account?{" "}
             <button
+              type="button"
               className="font-medium text-primary underline cursor-pointer"
-              onClick={() => {
-                setCurrentPage("signup");
-              }}
+              onClick={() => setCurrentPage("signup")}
             >
               SignUp
             </button>
@@ -104,6 +140,8 @@ const Login = ({ setCurrentPage }) => {
       </div>
     </div>
   );
-};
+});
+
+Login.displayName = "Login";
 
 export default Login;

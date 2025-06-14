@@ -1,85 +1,111 @@
-import { useContext, useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import React, { useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { useMutation } from "@tanstack/react-query";
 import axiosInstance from "../../utils/axiosInstance";
 import { API_PATHS } from "../../utils/apiPaths";
-import { UserContext } from "../../context/userContext";
+import useUserStore from "../../stores/userStore";
+import { signUpSchema, validateWithSchema } from "../../lib/schemas";
+import toast from "react-hot-toast";
 
 import AUTH_IMG from "../../assets/auth-img.jpg";
 import Input from "../Inputs/Input";
-import { validateEmail } from "../../utils/helper";
 import ProfilePhotoSelector from "../Inputs/ProfilePhotoSelector";
 import uploadImage from "../../utils/uploadImage";
 
-const SignUp = ({ setCurrentPage }) => {
+const SignUp = React.memo(({ setCurrentPage }) => {
   const [profilePic, setProfilePic] = useState(null);
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [adminAccessToken, setAdminAccessToken] = useState("");
-  const [error, setError] = useState(null);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    bio: "",
+    profileImageUrl: "",
+    adminAccessToken: "",
+  });
+  const [errors, setErrors] = useState({});
 
-  const { updateUser, setOpenAuthForm } = useContext(UserContext);
+  // Zustand stores
+  const setUser = useUserStore((state) => state.setUser);
+  const setOpenAuthForm = useUserStore((state) => state.setOpenAuthForm);
   const navigate = useNavigate();
 
-  const handleSignUp = async (e) => {
-    e.preventDefault();
+  // SignUp mutation
+  const signUpMutation = useMutation({
+    mutationFn: async (signUpData) => {
+      let profileImageUrl = "";
 
-    let profileImageUrl = "";
-
-    if (!fullName) {
-      setError("Please enter full name.");
-      return;
-    }
-
-    if (!validateEmail(email)) {
-      setError("Please enter a valid email addess.");
-      return;
-    }
-
-    if (!password) {
-      setError("Please enter the password.");
-      return;
-    }
-
-    setError("");
-
-    // SignUp API call
-    try {
+      // Upload profile image if provided
       if (profilePic) {
-        const imgUploadRes = await uploadImage(profilePic);
-        profileImageUrl = imgUploadRes.imageUrl || "";
+        try {
+          const imgUploadRes = await uploadImage(profilePic);
+          profileImageUrl = imgUploadRes.imageUrl || "";
+        } catch (uploadError) {
+          throw new Error("Failed to upload profile image");
+        }
       }
 
       const response = await axiosInstance.post(API_PATHS.AUTH.REGISTER, {
-        name: fullName,
-        email,
-        password,
+        ...signUpData,
         profileImageUrl,
-        adminAccessToken,
       });
-
-      const { token, role } = response.data;
-
+      return response.data;
+    },
+    onSuccess: (data) => {
+      const { token, role } = data;
       if (token) {
-        localStorage.getItem("token", token);
-        updateUser(response.data);
+        setUser(data);
+        setOpenAuthForm(false);
 
         if (role === "Admin") {
-          setOpenAuthForm(false);
           navigate("/admin/dashboard");
+        } else {
+          navigate("/");
         }
-        navigate("/");
 
-        setOpenAuthForm(false);
+        toast.success("Account created successfully!");
       }
-    } catch (error) {
-      if (error.response && error.response.data.message) {
-        setError(error.response.data.message);
-      } else {
-        setError("Something went wrong. Please tyr again");
+    },
+    onError: (error) => {
+      const message =
+        error.response?.data?.message ||
+        error.message ||
+        "Registration failed. Please try again.";
+      toast.error(message);
+      setErrors({ general: message });
+    },
+  });
+
+  // Handle input changes
+  const handleInputChange = useCallback(
+    (field, value) => {
+      setFormData((prev) => ({ ...prev, [field]: value }));
+      // Clear field-specific error when user starts typing
+      if (errors[field]) {
+        setErrors((prev) => ({ ...prev, [field]: "" }));
       }
-    }
-  };
+    },
+    [errors]
+  );
+
+  // Handle form submission
+  const handleSignUp = useCallback(
+    async (e) => {
+      e.preventDefault();
+
+      // Validate with Zod
+      const validation = validateWithSchema(signUpSchema, formData);
+
+      if (!validation.success) {
+        setErrors(validation.errors);
+        return;
+      }
+
+      // Clear errors and submit
+      setErrors({});
+      signUpMutation.mutate(validation.data);
+    },
+    [formData, signUpMutation]
+  );
 
   return (
     <div className="flex items-center h-auto md:h-[520px]">
@@ -93,45 +119,75 @@ const SignUp = ({ setCurrentPage }) => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <Input
-              value={fullName}
-              onChange={({ target }) => setFullName(target.value)}
+              value={formData.name}
+              onChange={({ target }) => handleInputChange("name", target.value)}
               label="Full Name"
-              placaholder="John"
+              placeholder="John Doe"
               type="text"
+              error={errors.name}
             />
             <Input
-              value={email}
-              onChange={({ target }) => setEmail(target.value)}
+              value={formData.email}
+              onChange={({ target }) =>
+                handleInputChange("email", target.value)
+              }
               label="Email Address"
-              placaholder="john@example.com"
-              type="text"
+              placeholder="john@example.com"
+              type="email"
+              error={errors.email}
             />
             <Input
-              value={password}
-              onChange={({ target }) => setPassword(target.value)}
+              value={formData.password}
+              onChange={({ target }) =>
+                handleInputChange("password", target.value)
+              }
               label="Password"
-              placaholder="Min 8 Characters"
+              placeholder="Min 6 Characters"
               type="password"
+              error={errors.password}
             />
             <Input
-              value={adminAccessToken}
-              onChange={({ target }) => setAdminAccessToken(target.value)}
-              label="Admin Invite Token"
-              placaholder="6 Digit Code"
-              type="number"
+              value={formData.adminAccessToken}
+              onChange={({ target }) =>
+                handleInputChange("adminAccessToken", target.value)
+              }
+              label="Admin Invite Token (Optional)"
+              placeholder="6 Digit Code"
+              type="text"
+              error={errors.adminAccessToken}
             />
           </div>
-          {error && <p className="text-red-500 text-xs pb-2.5"> {error} </p>}
-          <button type="submit" className="btn-primary">
-            SIGN UP
+
+          {/* Bio field */}
+          <div className="mt-4">
+            <Input
+              value={formData.bio}
+              onChange={({ target }) => handleInputChange("bio", target.value)}
+              label="Bio (Optional)"
+              placeholder="Tell us about yourself..."
+              type="text"
+              error={errors.bio}
+            />
+          </div>
+
+          {errors.general && (
+            <p className="text-red-500 text-xs pb-2.5">{errors.general}</p>
+          )}
+
+          <button
+            type="submit"
+            className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={signUpMutation.isPending}
+          >
+            {signUpMutation.isPending ? "CREATING ACCOUNT..." : "SIGN UP"}
           </button>
+
           <p className="text-[13px] text-slate-800 mt-3">
-            Already an account?{" "}
+            Already have an account?{" "}
             <button
+              type="button"
               className="font-medium text-primary underline cursor-pointer"
-              onClick={() => {
-                setCurrentPage("login");
-              }}
+              onClick={() => setCurrentPage("login")}
             >
               Login
             </button>
@@ -143,6 +199,8 @@ const SignUp = ({ setCurrentPage }) => {
       </div>
     </div>
   );
-};
+});
+
+SignUp.displayName = "SignUp";
 
 export default SignUp;

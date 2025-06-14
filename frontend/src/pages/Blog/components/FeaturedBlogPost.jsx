@@ -17,7 +17,11 @@ const FeaturedBlogPost = ({
         <img
           src={coverImageUrl}
           alt={title}
-          className="w-full h-80 object-cover "
+          className="w-full h-80 object-cover"
+          loading="lazy"
+          onError={(e) => {
+            e.target.src = "/placeholder-image.jpg"; // Fallback image
+          }}
         />
       </div>
       <div className="col-span-6">
@@ -43,6 +47,10 @@ const FeaturedBlogPost = ({
               src={authProfileImg}
               alt={authorName}
               className="w-8 h-8 rounded-full mr-2"
+              loading="lazy"
+              onError={(e) => {
+                e.target.src = "/default-avatar.png"; // Fallback avatar
+              }}
             />
             <div>
               <p className="text-gray-600 text-sm">{authorName}</p>
