@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 // Enhanced cache manager for avoiding 429 rate limit errors
 class CacheManager {
   constructor() {

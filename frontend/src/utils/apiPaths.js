@@ -32,7 +32,7 @@ export const API_PATHS = {
     CREATE: "/api/posts",
     GET_ALL: "/api/posts",
     GET_TRENDING_POST: "/api/posts/trending",
-    GET_BY_SLUG: (slug) => `/api/posts/slug/${slug}`,
+    GET_BY_SLUG: (slug) => `/api/posts/${slug}`,
     UPDATE: (id) => `/api/posts/${id}`,
     DELETE: (id) => `/api/posts/${id}`,
     GET_BY_TAG: (tag) => `/api/posts/tag/${tag}`,
@@ -47,5 +47,32 @@ export const API_PATHS = {
     DELETE: (commentId) => `/api/comments/${commentId}`,
     UPDATE: (commentId) => `/api/comments/${commentId}`,
     LIKE: (commentId) => `/api/comments/${commentId}/like`,
+  },
+  NOTIFICATIONS: {
+    GET_ALL: "/api/notifications",
+    GET_UNREAD_COUNT: "/api/notifications/unread-count",
+    MARK_AS_READ: (id) => `/api/notifications/${id}/read`,
+    MARK_ALL_AS_READ: "/api/notifications/mark-all-read",
+    DELETE: (id) => `/api/notifications/${id}`,
+  },
+
+  // Tag endpoints
+  TAGS: {
+    GET_ALL: "/api/tags",
+    GET_STATS: "/api/tags/stats",
+    GET_POPULAR: "/api/tags/popular",
+    GET_SUGGESTIONS: "/api/tags/suggestions",
+    GET_DETAILS: (tagName) => `/api/tags/${tagName}`,
+    CREATE: "/api/tags",
+    UPDATE: (id) => `/api/tags/${id}`,
+    DELETE: (id) => `/api/tags/${id}`,
+    MERGE: "/api/tags/merge",
+  },
+
+  // Slug endpoints
+  SLUGS: {
+    GENERATE: "/api/posts/generate-slug",
+    VALIDATE: "/api/posts/validate-slug",
+    REGENERATE: (id) => `/api/posts/${id}/regenerate-slug`,
   },
 };

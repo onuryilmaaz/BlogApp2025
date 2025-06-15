@@ -5,6 +5,7 @@ import BlogLayout from "../../components/layouts/BlogLayout/BlogLayout";
 import useUserStore from "../../stores/userStore";
 import axiosInstance from "../../utils/axiosInstance";
 import { API_PATHS } from "../../utils/apiPaths";
+import { useSocket } from "../../contexts/SocketContext";
 import { LuDot, LuSparkles, LuCircleAlert } from "react-icons/lu";
 import moment from "moment";
 import MarkDownContent from "./components/MarkDownContent";
@@ -25,6 +26,9 @@ const BlogPostView = React.memo(() => {
   // Zustand stores
   const user = useUserStore((state) => state.user);
   const setOpenAuthForm = useUserStore((state) => state.setOpenAuthForm);
+
+  // Socket context
+  const { joinPostRoom, leavePostRoom } = useSocket();
 
   // Local state
   const [blogPostData, setBlogPostData] = useState(null);
@@ -50,7 +54,6 @@ const BlogPostView = React.memo(() => {
       const response = await axiosInstance.get(
         API_PATHS.POSTS.GET_BY_SLUG(slug)
       );
-      console.log("📄 Post API Response:", response.data);
 
       setBlogPostData(response.data);
       setPostError(null);
@@ -88,7 +91,6 @@ const BlogPostView = React.memo(() => {
       const response = await axiosInstance.get(
         API_PATHS.COMMENTS.GET_ALL_BY_POST(postId)
       );
-      console.log("💬 Comments API Response:", response.data);
 
       // Handle different response structures
       const commentsData = response.data.comments || response.data;
@@ -110,8 +112,16 @@ const BlogPostView = React.memo(() => {
   useEffect(() => {
     if (blogPostData?._id) {
       fetchComments(blogPostData._id);
+
+      // Join post room for real-time comments
+      joinPostRoom(blogPostData._id);
+
+      // Cleanup: leave room when component unmounts or post changes
+      return () => {
+        leavePostRoom(blogPostData._id);
+      };
     }
-  }, [blogPostData?._id]);
+  }, [blogPostData?._id, joinPostRoom, leavePostRoom]);
 
   // Memoized handlers
   const handleTagClick = useCallback(
@@ -436,6 +446,7 @@ const BlogPostView = React.memo(() => {
             postId={blogPostData._id || ""}
             likes={blogPostData.likes || 0}
             comments={comments?.length || 0}
+            isLikedByUser={blogPostData.isLikedByUser || false}
           />
         </div>
         <div className="col-span-12 md:col-span-4">

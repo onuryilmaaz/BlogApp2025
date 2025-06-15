@@ -2,9 +2,11 @@ import React, { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { HelmetProvider } from "react-helmet-async";
 import { Toaster } from "react-hot-toast";
 import { Suspense, lazy } from "react";
 import { queryClient } from "./lib/queryClient";
+import cacheOptimization from "./utils/cacheOptimization";
 import BlogLandingPage from "./pages/Blog/BlogLandingPage";
 import BlogPostView from "./pages/Blog/BlogPostView";
 import PostByTags from "./pages/Blog/PostByTags";
@@ -12,6 +14,7 @@ import SearchPosts from "./pages/Blog/SearchPosts";
 import useUserStore from "./stores/userStore";
 import axiosInstance from "./utils/axiosInstance";
 import { API_PATHS } from "./utils/apiPaths";
+import { SocketProvider } from "./contexts/SocketContext";
 
 // Lazy load admin components for better performance
 const AdminLogin = lazy(() => import("./pages/Admin/AdminLogin"));
@@ -120,6 +123,8 @@ const UserInitializer = () => {
       const token = localStorage.getItem("token");
       if (!token) {
         setLoading(false);
+        // Warm cache for public content
+        cacheOptimization.warmCache.popular();
         return;
       }
 
@@ -127,10 +132,17 @@ const UserInitializer = () => {
         setLoading(true);
         const response = await axiosInstance.get(API_PATHS.AUTH.GET_USER_INFO);
         setUser(response.data);
-        console.log("✅ User initialized:", response.data);
+
+        // Warm cache for authenticated user
+        if (response.data.role === "Admin") {
+          cacheOptimization.warmCache.dashboard();
+        }
+        cacheOptimization.warmCache.popular();
       } catch (error) {
         console.error("❌ Failed to initialize user:", error);
         clearUser();
+        // Still warm public cache on error
+        cacheOptimization.warmCache.popular();
       } finally {
         setLoading(false);
       }
@@ -144,77 +156,131 @@ const UserInitializer = () => {
 
 const App = () => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ErrorBoundary>
-        <UserInitializer />
-        <div>
-          <Router>
-            <Suspense
-              fallback={
-                <div className="min-h-screen flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-                </div>
-              }
-            >
-              <Routes>
-                {/* Default Route */}
-                <Route path="/" element={<BlogLandingPage />} />
-                <Route path="/:slug" element={<BlogPostView />} />
-                <Route path="/tag/:tagName" element={<PostByTags />} />
-                <Route path="/search" element={<SearchPosts />} />
-
-                {/* Auth Routes */}
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-
-                {/* User Routes */}
-                <Route
-                  path="/profile"
-                  element={
-                    <PrivateRoute allowedRoles={["Admin", "Member"]}>
-                      <UserProfile />
-                    </PrivateRoute>
+    <HelmetProvider>
+      <QueryClientProvider client={queryClient}>
+        <ErrorBoundary>
+          <UserInitializer />
+          <SocketProvider>
+            <div>
+              <Router>
+                <Suspense
+                  fallback={
+                    <div className="min-h-screen flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                    </div>
                   }
-                />
+                >
+                  <Routes>
+                    {/* Default Route */}
+                    <Route path="/" element={<BlogLandingPage />} />
+                    <Route path="/:slug" element={<BlogPostView />} />
+                    <Route path="/tag/:tagName" element={<PostByTags />} />
+                    <Route path="/search" element={<SearchPosts />} />
 
-                {/* Admin Routes */}
-                <Route element={<PrivateRoute allowedRoles={["Admin"]} />} />
-                <Route path="/admin/dashboard" element={<Dashboard />} />
-                <Route path="/admin/posts" element={<BlogPosts />} />
-                <Route path="/admin/users" element={<UserManagement />} />
-                <Route path="/admin/create" element={<BlogPostEditor />} />
-                <Route
-                  path="/admin/edit/:postSlug"
-                  element={<BlogPostEditor isEdit={true} />}
-                />
-                <Route path="/admin/comments" element={<Comments />} />
-                <Route />
+                    {/* Auth Routes */}
+                    <Route
+                      path="/forgot-password"
+                      element={<ForgotPassword />}
+                    />
+                    <Route path="/reset-password" element={<ResetPassword />} />
 
-                <Route path="/admin-login" element={<AdminLogin />} />
-              </Routes>
+                    {/* User Routes */}
+                    <Route
+                      path="/profile"
+                      element={
+                        <PrivateRoute allowedRoles={["Admin", "Member"]}>
+                          <UserProfile />
+                        </PrivateRoute>
+                      }
+                    />
+
+                    {/* Admin Routes */}
+                    <Route
+                      path="/admin/dashboard"
+                      element={
+                        <PrivateRoute allowedRoles={["Admin"]}>
+                          <Dashboard />
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route
+                      path="/admin/posts"
+                      element={
+                        <PrivateRoute allowedRoles={["Admin"]}>
+                          <BlogPosts />
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route
+                      path="/admin/users"
+                      element={
+                        <PrivateRoute allowedRoles={["Admin"]}>
+                          <UserManagement />
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route
+                      path="/admin/create"
+                      element={
+                        <PrivateRoute allowedRoles={["Admin"]}>
+                          <BlogPostEditor />
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route
+                      path="/admin/edit/:postSlug"
+                      element={
+                        <PrivateRoute allowedRoles={["Admin"]}>
+                          <BlogPostEditor isEdit={true} />
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route
+                      path="/admin/comments"
+                      element={
+                        <PrivateRoute allowedRoles={["Admin"]}>
+                          <Comments />
+                        </PrivateRoute>
+                      }
+                    />
+
+                    {/* Catch-all admin route */}
+                    <Route
+                      path="/admin"
+                      element={
+                        <PrivateRoute allowedRoles={["Admin"]}>
+                          <Dashboard />
+                        </PrivateRoute>
+                      }
+                    />
+
+                    <Route path="/admin-login" element={<AdminLogin />} />
+                  </Routes>
+                </Suspense>
+              </Router>
+              <Toaster
+                position="top-right"
+                toastOptions={{
+                  duration: 4000,
+                  style: {
+                    background: "oklch(0.723 0.219 149.579)",
+                    color: "#fff",
+                  },
+                }}
+              />
+            </div>
+          </SocketProvider>
+
+          {/* Development tools */}
+          {import.meta.env.MODE === "development" && (
+            <Suspense fallback={null}>
+              <PerformanceMonitor />
+              <ReactQueryDevtools initialIsOpen={false} />
             </Suspense>
-          </Router>
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              duration: 4000,
-              style: {
-                background: "oklch(0.723 0.219 149.579)",
-                color: "#fff",
-              },
-            }}
-          />
-        </div>
-
-        {/* Development tools */}
-        {import.meta.env.MODE === "development" && (
-          <Suspense fallback={null}>
-            <PerformanceMonitor />
-            <ReactQueryDevtools initialIsOpen={false} />
-          </Suspense>
-        )}
-      </ErrorBoundary>
-    </QueryClientProvider>
+          )}
+        </ErrorBoundary>
+      </QueryClientProvider>
+    </HelmetProvider>
   );
 };
 

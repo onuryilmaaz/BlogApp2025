@@ -27,6 +27,11 @@ const generateBlogPost = async (req, res) => {
     if (!title || !tone) {
       return res.status(400).json({ message: "Missing required fields" });
     }
+
+    if (!ai) {
+      return res.status(500).json({ message: "AI service is not available" });
+    }
+
     const prompt = `Write a markdown-formatted blog post titled "${title}". Use a ${tone} tone. Include an introduction, subheadings, code examples if relevant, and a conclusion.`;
 
     const response = await ai.models.generateContent({
@@ -37,6 +42,7 @@ const generateBlogPost = async (req, res) => {
     let rawText = response.text;
     res.status(200).json(rawText);
   } catch (error) {
+    logger.error("Generate blog post error:", error);
     res
       .status(500)
       .json({ message: "Failed to generate blog post", error: error.message });
@@ -80,23 +86,29 @@ const generateBlogPostIdeas = async (req, res) => {
     try {
       data = JSON.parse(cleanedText);
 
-      // Validate the structure
-      if (!Array.isArray(data) || data.length === 0) {
-        throw new Error("Invalid response format: expected non-empty array");
+      // Validate the structure - make validation more flexible
+      if (!Array.isArray(data)) {
+        // If it's not an array, try to wrap it
+        if (typeof data === "object" && data !== null) {
+          data = [data];
+        } else {
+          throw new Error("Invalid response format: expected array or object");
+        }
       }
 
-      // Validate each item
+      if (data.length === 0) {
+        throw new Error("Invalid response format: empty array");
+      }
+
+      // Validate each item with more flexible validation
       data.forEach((item, index) => {
-        if (
-          !item.title ||
-          !item.description ||
-          !Array.isArray(item.tags) ||
-          !item.tone
-        ) {
-          throw new Error(
-            `Invalid item at index ${index}: missing required fields`
-          );
+        if (!item.title) {
+          throw new Error(`Invalid item at index ${index}: missing title`);
         }
+        // Set defaults for missing fields
+        if (!item.description) item.description = "Açıklama mevcut değil";
+        if (!Array.isArray(item.tags)) item.tags = ["genel"];
+        if (!item.tone) item.tone = "günlük";
       });
     } catch (parseError) {
       logger.error("JSON parsing failed:", {
@@ -138,6 +150,10 @@ const generateCommentReply = async (req, res) => {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
+    if (!ai) {
+      return res.status(500).json({ message: "AI service is not available" });
+    }
+
     const prompt = generateReplyPrompt({ author, content });
 
     const response = await ai.models.generateContent({
@@ -148,6 +164,7 @@ const generateCommentReply = async (req, res) => {
     let rawText = response.text;
     res.status(200).json(rawText);
   } catch (error) {
+    logger.error("Generate comment reply error:", error);
     res.status(500).json({
       message: "Failed to generate comment reply",
       error: error.message,
@@ -192,10 +209,16 @@ const generatePostSummary = async (req, res) => {
     try {
       data = JSON.parse(cleanedText);
 
-      // Validate the structure
-      if (!data.title || !data.summary) {
-        throw new Error("Invalid response format: missing title or summary");
+      // Validate the structure with more flexible validation
+      if (!data.title && !data.summary) {
+        throw new Error(
+          "Invalid response format: missing both title and summary"
+        );
       }
+
+      // Set defaults for missing fields
+      if (!data.title) data.title = "Blog Yazısı Özeti";
+      if (!data.summary) data.summary = cleanedText; // Use raw text as summary
 
       // Ensure title is not too long
       if (data.title.length > 200) {
@@ -211,15 +234,17 @@ const generatePostSummary = async (req, res) => {
       // Fallback response
       data = {
         title: "Blog Yazısı Özeti",
-        summary: "AI yanıtı işlenirken bir hata oluştu. Lütfen tekrar deneyin.",
+        summary:
+          cleanedText ||
+          "AI yanıtı işlenirken bir hata oluştu. Lütfen tekrar deneyin.",
       };
     }
 
     res.status(200).json(data);
   } catch (error) {
-    logger.error("Generate summary error:", error);
+    logger.error("Generate post summary error:", error);
     res.status(500).json({
-      message: "Failed to generate blog post summary",
+      message: "Failed to generate post summary",
       error: error.message,
     });
   }

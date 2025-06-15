@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axiosInstance from "../utils/axiosInstance";
 import { API_PATHS } from "../utils/apiPaths";
@@ -12,7 +13,6 @@ export const useAllComments = (options = {}) => {
     queryFn: async () => {
       try {
         const response = await axiosInstance.get(API_PATHS.COMMENTS.GET_ALL);
-        console.log("All comments API Response:", response.data);
 
         // Handle potential paginated or direct array response
         const commentsData = response.data.comments || response.data;
@@ -54,7 +54,6 @@ export const useCommentsByPost = (postId, options = {}) => {
         const response = await axiosInstance.get(
           API_PATHS.COMMENTS.GET_ALL_BY_POST(postId)
         );
-        console.log("Comments by post API Response:", response.data);
 
         // Handle potential paginated or direct array response
         const commentsData = response.data.comments || response.data;

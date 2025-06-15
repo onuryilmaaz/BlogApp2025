@@ -288,7 +288,6 @@ if (!isProduction) {
   module.exports.plugins.push(
     new webpack.ProgressPlugin((percentage, message, ...args) => {
       if (percentage === 1) {
-        console.log("\n✅ Build completed successfully!");
       }
     })
   );

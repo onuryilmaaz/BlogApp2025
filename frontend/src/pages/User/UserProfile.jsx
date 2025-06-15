@@ -64,10 +64,12 @@ const UserProfile = () => {
 
     try {
       setImageUploading(true);
-      const imageUrl = await uploadImage(file);
+      const response = await uploadImage(file);
+      const imageUrl = response.imageUrl || response.data?.imageUrl;
       setFormData((prev) => ({ ...prev, profileImageUrl: imageUrl }));
       toast.success("Image uploaded successfully!");
     } catch (error) {
+      console.error("Image upload error:", error);
       toast.error("Failed to upload image. Please try again.");
     } finally {
       setImageUploading(false);

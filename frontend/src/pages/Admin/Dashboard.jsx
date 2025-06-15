@@ -44,24 +44,20 @@ const Dashboard = () => {
         setLoading(true);
       }
       setError(null);
-      console.log("Fetching dashboard data...");
 
       const response = await axiosInstance.get(
         API_PATHS.DASHBOARD.GET_DASHBOARD_DATA
       );
 
-      console.log("Dashboard API Response:", response.data);
 
       if (response.data) {
         setDashboardData(response.data);
 
         const topPosts = response.data?.topPosts || [];
-        console.log("Top Posts:", topPosts);
 
         const totalViews = Math.max(...topPosts.map((p) => p.views || 0), 1);
         setMaxViews(totalViews);
 
-        console.log("Recent Comments:", response.data?.recentComments);
       }
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
@@ -144,7 +140,7 @@ const Dashboard = () => {
 
   // Quick Actions Widget
   const QuickActionsWidget = () => (
-    <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-6 rounded-xl text-white">
+    <div className="bg-gradient-to-r from-sky-500 to-cyan-400 p-6 rounded-xl text-white">
       <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
       <div className="grid grid-cols-2 gap-3">
         <button className="bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-lg p-3 text-sm font-medium transition-colors">
@@ -172,7 +168,7 @@ const Dashboard = () => {
     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold flex items-center gap-2">
-          <LuClock className="w-5 h-5 text-blue-500" />
+          <LuClock className="w-5 h-5 text-sky-500" />
           Recent Activity
         </h3>
         <span className="text-xs text-gray-500">Live</span>
@@ -187,11 +183,11 @@ const Dashboard = () => {
               <div
                 className={`p-1.5 rounded-full ${
                   activity.type === "post"
-                    ? "bg-blue-100 text-blue-600"
+                    ? "bg-sky-100 text-sky-600"
                     : activity.type === "comment"
-                    ? "bg-green-100 text-green-600"
+                    ? "bg-cyan-100 text-cyan-600"
                     : activity.type === "user"
-                    ? "bg-purple-100 text-purple-600"
+                    ? "bg-sky-100 text-sky-600"
                     : "bg-gray-100 text-gray-600"
                 }`}
               >
@@ -318,14 +314,14 @@ const Dashboard = () => {
       {dashboardData && (
         <>
           {/* Header Section */}
-          <div className="bg-gradient-to-r from-blue-600 to-purple-700 p-6 rounded-2xl text-white mt-5 relative overflow-hidden">
+          <div className="bg-gradient-to-r from-sky-600 to-cyan-500 p-6 rounded-2xl text-white mt-5 relative overflow-hidden">
             <div className="relative z-10">
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-2xl md:text-3xl font-bold">
                     {getGreeting()}! {user?.name || "User"}
                   </h2>
-                  <p className="text-blue-100 mt-2 flex items-center gap-2">
+                  <p className="text-sky-100 mt-2 flex items-center gap-2">
                     <LuCalendar className="w-4 h-4" />
                     {moment().format("dddd, MMMM Do YYYY")}
                   </p>

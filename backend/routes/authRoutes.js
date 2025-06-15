@@ -69,6 +69,7 @@ router.delete(
 
 router.post(
   "/upload-image",
+  protect,
   upload.single("image"),
   handleUploadError,
   optimizeImage,

@@ -14,7 +14,6 @@ try {
         new Sentry.Integrations.Express({ app: require("express")() }),
       ],
     });
-    console.log("✅ Sentry Error Monitoring Initialized");
   }
 } catch (error) {
   console.warn("⚠️ Sentry not available, using local error handling");

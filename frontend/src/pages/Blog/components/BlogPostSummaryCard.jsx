@@ -1,6 +1,5 @@
 import React, { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import OptimizedImage from "../../../components/ui/OptimizedImage";
 
 const BlogPostSummaryCard = React.memo(
   ({
@@ -28,12 +27,14 @@ const BlogPostSummaryCard = React.memo(
         className="bg-white shadow-lg shadow-gray-100 rounded-xl overflow-hidden cursor-pointer hover:shadow-xl transition-shadow duration-300"
         onClick={onClick}
       >
-        <OptimizedImage
+        <img
           src={coverImageUrl}
           alt={title}
           className="w-full h-64 object-cover"
           loading="lazy"
-          fallbackSrc="/placeholder-image.jpg"
+          onError={(e) => {
+            e.target.src = "/placeholder-image.jpg";
+          }}
         />
         <div className="p-4 md:p-6">
           <h2 className="text-base md:text-lg font-bold mb-2 line-clamp-3">
@@ -54,12 +55,14 @@ const BlogPostSummaryCard = React.memo(
             ))}
           </div>
           <div className="flex items-center">
-            <OptimizedImage
+            <img
               src={authProfileImg}
               alt={authorName}
               className="w-8 h-8 rounded-full mr-2"
               loading="lazy"
-              fallbackSrc="/default-avatar.png"
+              onError={(e) => {
+                e.target.src = "/default-avatar.png";
+              }}
             />
             <div>
               <p className="text-gray-600 text-sm">{authorName}</p>

@@ -1,5 +1,6 @@
 const Comment = require("../models/Comment");
 const BlogPost = require("../models/BlogPost");
+const NotificationService = require("../services/notificationService");
 
 // @desc   Add comment to a blog post
 // @route  POST /api/comments/:postId
@@ -10,7 +11,7 @@ const addComment = async (req, res) => {
     const { content, parentComment } = req.body;
 
     // Ensure blog post exists
-    const post = await BlogPost.findById(postId);
+    const post = await BlogPost.findById(postId).populate("author", "name _id");
     if (!post) {
       return res.status(404).json({ message: "Post not found" });
     }
@@ -23,6 +24,28 @@ const addComment = async (req, res) => {
     });
 
     await comment.populate("author", "name profileImageUrl");
+
+    // Send notification to post author (if not commenting on own post)
+    if (post.author._id.toString() !== req.user._id.toString()) {
+      try {
+        await NotificationService.notifyNewComment({
+          postAuthorId: post.author._id,
+          commenterName: req.user.name,
+          commenterId: req.user._id,
+          postTitle: post.title,
+          postId: post._id,
+          commentId: comment._id,
+          postSlug: post.slug,
+        });
+      } catch (notificationError) {
+        console.error(
+          "Failed to send comment notification:",
+          notificationError
+        );
+        // Don't fail the comment creation if notification fails
+      }
+    }
+
     res.status(201).json(comment);
   } catch (error) {
     res

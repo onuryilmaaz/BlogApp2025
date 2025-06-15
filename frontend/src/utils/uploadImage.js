@@ -9,12 +9,7 @@ const uploadImage = async (imageFile) => {
   try {
     const response = await axiosInstance.post(
       API_PATHS.IMAGE.UPLOAD_IMAGE,
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      }
+      formData
     );
     return response.data;
   } catch (error) {
@@ -23,4 +18,6 @@ const uploadImage = async (imageFile) => {
   }
 };
 
+// Export both named and default
+export { uploadImage };
 export default uploadImage;

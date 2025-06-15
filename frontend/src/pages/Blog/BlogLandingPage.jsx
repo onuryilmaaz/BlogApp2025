@@ -29,7 +29,6 @@ const BlogLandingPage = () => {
         `${API_PATHS.POSTS.GET_ALL}?page=${page}`
       );
 
-      console.log("📡 API Response:", response.data);
 
       // Handle different response structures
       let posts = [];
@@ -53,8 +52,8 @@ const BlogLandingPage = () => {
         pagination = { page: 1, totalPages: 1, totalCount: 0 };
       }
 
-      console.log("📊 Processed posts:", posts);
-      console.log("📄 Pagination:", pagination);
+      // Filter out draft posts and posts that need review for public view
+      posts = posts.filter((post) => !post.isDraft && !post.needsReview);
 
       if (append) {
         setBlogPostList((prev) => [...prev, ...posts]);

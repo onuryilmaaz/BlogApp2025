@@ -36,13 +36,9 @@ const advancedSearch = asyncHandler(async (req, res) => {
   if (type === "posts" || type === "all") {
     const postQuery = { ...baseQuery };
 
-    // Text search
+    // Text search using MongoDB full-text search
     if (q.trim()) {
-      postQuery.$or = [
-        { title: { $regex: q, $options: "i" } },
-        { content: { $regex: q, $options: "i" } },
-        { summary: { $regex: q, $options: "i" } },
-      ];
+      postQuery.$text = { $search: q };
     }
 
     // Tags filter
@@ -80,22 +76,30 @@ const advancedSearch = asyncHandler(async (req, res) => {
       default:
         // If text search, sort by relevance (score), otherwise by date
         if (q.trim()) {
-          sortOptions = { score: { $meta: "textScore" } };
-          if (postQuery.$or) {
-            // Add text index scoring
-            postQuery.$text = { $search: q };
-            delete postQuery.$or; // Use text index instead of regex
-          }
+          sortOptions = { score: { $meta: "textScore" }, createdAt: -1 };
         } else {
           sortOptions = { createdAt: -1 };
         }
         break;
     }
 
-    const posts = await BlogPost.find(postQuery)
-      .select(
-        "title slug summary coverImageUrl tags createdAt author views likes"
-      )
+    // Add text score projection if using text search
+    const projection = q.trim()
+      ? {
+          title: 1,
+          slug: 1,
+          summary: 1,
+          coverImageUrl: 1,
+          tags: 1,
+          createdAt: 1,
+          author: 1,
+          views: 1,
+          likes: 1,
+          score: { $meta: "textScore" },
+        }
+      : "title slug summary coverImageUrl tags createdAt author views likes";
+
+    const posts = await BlogPost.find(postQuery, projection)
       .populate("author", "name profileImageUrl")
       .sort(sortOptions)
       .skip((page - 1) * limit)
@@ -294,16 +298,19 @@ const autoComplete = asyncHandler(async (req, res) => {
       .limit(3)
       .lean(),
 
-    // Full-text matches in content
-    BlogPost.find({
-      $or: [
-        { title: { $regex: q, $options: "i" } },
-        { content: { $regex: q, $options: "i" } },
-      ],
-      isDraft: false,
-      needsReview: { $ne: true },
-    })
-      .select("title")
+    // Full-text matches using MongoDB text search
+    BlogPost.find(
+      {
+        $text: { $search: q },
+        isDraft: false,
+        needsReview: { $ne: true },
+      },
+      {
+        title: 1,
+        score: { $meta: "textScore" },
+      }
+    )
+      .sort({ score: { $meta: "textScore" } })
       .limit(3)
       .lean(),
 

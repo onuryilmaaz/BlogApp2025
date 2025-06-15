@@ -25,9 +25,7 @@ const initializeRedis = async () => {
         redisClient = null; // Fallback to memory cache
       });
 
-      redisClient.on("connect", () => {
-        console.log("✅ Redis Cache Connected");
-      });
+      redisClient.on("connect", () => {});
 
       await redisClient.connect();
     }
@@ -130,11 +128,8 @@ const createCacheMiddleware = (cacheKey, ttl) => {
       const cachedData = await getFromCache(key);
 
       if (cachedData) {
-        console.log(`🚀 Cache HIT: ${key}`);
         return res.json(cachedData);
       }
-
-      console.log(`💾 Cache MISS: ${key}`);
 
       // Override res.json to cache the response
       const originalJson = res.json;

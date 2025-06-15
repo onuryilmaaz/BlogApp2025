@@ -61,11 +61,9 @@ const Comments = () => {
     try {
       setLoading(true);
       setError(null);
-      console.log("Fetching comments...");
 
       const response = await axiosInstance.get(API_PATHS.COMMENTS.GET_ALL);
 
-      console.log("Comments API Response:", response.data);
       setComments(response.data?.length > 0 ? response.data : []);
     } catch (error) {
       console.error("Error fetching comments:", error);

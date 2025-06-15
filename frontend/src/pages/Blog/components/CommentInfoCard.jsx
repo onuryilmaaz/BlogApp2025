@@ -208,7 +208,7 @@ const CommentInfoCard = ({
                       className="flex items-center gap-2 text-[13px] font-medium text-sky-600 bg-sky-50 px-4 py-0.5 rounded-full hover:bg-sky-500 hover:text-white cursor-pointer transition-colors"
                       onClick={() => {
                         if (!user) {
-                          console.log("User:", user);
+                          ("User:", user);
                           setOpenAuthForm(true);
                           return;
                         }

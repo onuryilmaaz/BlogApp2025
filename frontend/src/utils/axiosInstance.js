@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import axios from "axios";
 import { BASE_URL } from "./apiPaths";
 import cacheManager from "./cacheManager";

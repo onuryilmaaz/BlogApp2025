@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axiosInstance from "../utils/axiosInstance";
 import { API_PATHS } from "../utils/apiPaths";
@@ -16,13 +17,10 @@ export const usePosts = (options = {}) => {
         const cacheKey = "posts_all";
         const cachedData = localStorageCache.get(cacheKey);
         if (cachedData) {
-          console.log("📦 Using cached posts data");
           return cachedData;
         }
 
-        console.log("🌐 Fetching posts from API...");
         const response = await axiosInstance.get(API_PATHS.POSTS.GET_ALL);
-        console.log("Posts API Response:", response.data);
 
         // Handle paginated response structure
         const postsData = response.data.posts || response.data;
@@ -57,7 +55,6 @@ export const usePosts = (options = {}) => {
         // Try to return cached data even if expired as fallback
         const fallbackData = localStorageCache.get("posts_all");
         if (fallbackData) {
-          console.log("🔄 Using expired cache as fallback");
           return fallbackData;
         }
 
@@ -80,15 +77,12 @@ export const useTrendingPosts = (options = {}) => {
         const cacheKey = "posts_trending";
         const cachedData = localStorageCache.get(cacheKey);
         if (cachedData) {
-          console.log("📦 Using cached trending posts data");
           return cachedData;
         }
 
-        console.log("🌐 Fetching trending posts from API...");
         const response = await axiosInstance.get(
           API_PATHS.POSTS.GET_TRENDING_POST
         );
-        console.log("Trending Posts API Response:", response.data);
 
         // Handle paginated response structure
         const postsData = response.data.posts || response.data;
@@ -121,7 +115,6 @@ export const useTrendingPosts = (options = {}) => {
         // Try to return cached data as fallback
         const fallbackData = localStorageCache.get("posts_trending");
         if (fallbackData) {
-          console.log("🔄 Using expired trending cache as fallback");
           return fallbackData;
         }
 
@@ -160,7 +153,6 @@ export const usePostsByTag = (tag, options = {}) => {
         const response = await axiosInstance.get(
           API_PATHS.POSTS.GET_BY_TAG(tag)
         );
-        console.log("Posts by tag API Response:", response.data);
 
         // Handle paginated response structure
         const postsData = response.data.posts || response.data;
@@ -203,7 +195,6 @@ export const useSearchPosts = (query, options = {}) => {
         const response = await axiosInstance.get(API_PATHS.POSTS.SEARCH, {
           params: { q: query },
         });
-        console.log("Search posts API Response:", response.data);
 
         // Handle paginated response structure
         const postsData = response.data.posts || response.data;

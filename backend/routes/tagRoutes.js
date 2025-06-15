@@ -1,36 +1,29 @@
 const express = require("express");
-const { body } = require("express-validator");
 const router = express.Router();
-
 const {
   getAllTags,
-  getTagDetails,
-  mergeTag,
+  getTagStats,
+  createTag,
+  updateTag,
   deleteTag,
-  getTagAnalytics,
-  searchTags,
+  getPopularTags,
+  getTagSuggestions,
+  mergeTags,
+  getTagDetails,
 } = require("../controllers/tagController");
-
 const { protect, adminOnly } = require("../middlewares/authMiddleware");
 
 // Public routes
 router.get("/", getAllTags);
-router.get("/search", searchTags);
-router.get("/analytics", getTagAnalytics);
-router.get("/:tag", getTagDetails);
+router.get("/popular", getPopularTags);
+router.get("/suggestions", getTagSuggestions);
+router.get("/stats", getTagStats);
+router.get("/:tagName", getTagDetails);
 
-// Admin routes
-router.put(
-  "/merge",
-  protect,
-  adminOnly,
-  [
-    body("oldTag").notEmpty().withMessage("Old tag is required"),
-    body("newTag").notEmpty().withMessage("New tag is required"),
-  ],
-  mergeTag
-);
-
-router.delete("/:tag", protect, adminOnly, deleteTag);
+// Protected routes (admin only)
+router.post("/", protect, adminOnly, createTag);
+router.put("/:tagId", protect, adminOnly, updateTag);
+router.delete("/:tagId", protect, adminOnly, deleteTag);
+router.post("/merge", protect, adminOnly, mergeTags);
 
 module.exports = router;

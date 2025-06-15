@@ -133,9 +133,6 @@ const forgotPassword = async (req, res) => {
     // In production, you would send an email with the reset link
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
 
-    console.log(`Password reset token for ${email}: ${resetToken}`);
-    console.log(`Reset URL: ${resetUrl}`);
-
     res.json({
       message: "Password reset link sent to your email",
       // Remove this in production - only for development

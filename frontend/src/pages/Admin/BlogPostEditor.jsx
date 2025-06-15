@@ -67,7 +67,7 @@ const BlogPostEditor = ({ isEdit }) => {
         setPostIdeas(generatedIdeas);
       }
     } catch (error) {
-      console.log("Someting went wrong. Please try again.", error);
+      console.error("Someting went wrong. Please try again.", error);
     } finally {
       setIdeaLoading(false);
     }
@@ -276,7 +276,6 @@ const BlogPostEditor = ({ isEdit }) => {
                     commands.orderedListCommand,
                     commands.checkedListCommand,
                   ]}
-                  visibleDragBar={false}
                 />
               </div>
             </div>

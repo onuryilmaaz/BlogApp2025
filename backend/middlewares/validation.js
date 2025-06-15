@@ -126,21 +126,9 @@ const validateAIGeneration = [
 
   body("tone")
     .optional()
-    .isIn([
-      "professional",
-      "casual",
-      "technical",
-      "friendly",
-      "formal",
-      "teknik",
-      "günlük",
-      "başlangıç",
-      "profesyonel",
-      "eğlenceli",
-    ])
-    .withMessage(
-      "Tone must be one of: professional, casual, technical, friendly, formal, teknik, günlük, başlangıç, profesyonel, eğlenceli"
-    ),
+    .trim()
+    .isLength({ min: 1, max: 100 })
+    .withMessage("Tone must be between 1 and 100 characters"),
 
   body("topics")
     .optional()

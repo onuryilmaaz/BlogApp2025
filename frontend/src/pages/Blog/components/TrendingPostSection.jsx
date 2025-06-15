@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../../utils/axiosInstance";
 import { API_PATHS } from "../../../utils/apiPaths";
-import OptimizedImage from "../../../components/ui/OptimizedImage";
 
 const TrendingPostSection = React.memo(() => {
   const navigate = useNavigate();
@@ -17,7 +16,6 @@ const TrendingPostSection = React.memo(() => {
         API_PATHS.POSTS.GET_TRENDING_POST
       );
 
-      console.log("📈 Trending API Response:", response.data);
 
       // Handle different response structures
       let posts = [];
@@ -30,7 +28,9 @@ const TrendingPostSection = React.memo(() => {
         posts = [];
       }
 
-      console.log("📊 Trending posts processed:", posts);
+      // Filter out draft posts and posts that need review for public view
+      posts = posts.filter((post) => !post.isDraft && !post.needsReview);
+
       setPostList(posts);
       setError(null);
     } catch (err) {
@@ -168,12 +168,14 @@ const PostCard = React.memo(({ title, coverImageUrl, tags, onClick }) => {
     >
       <div className="flex items-start gap-3">
         <div className="flex-shrink-0">
-          <OptimizedImage
+          <img
             src={coverImageUrl}
             alt={title}
             className="w-16 h-16 object-cover rounded-lg shadow-sm"
             loading="lazy"
-            fallbackSrc="/placeholder-image.jpg"
+            onError={(e) => {
+              e.target.src = "/placeholder-image.jpg";
+            }}
           />
         </div>
         <div className="flex-1 min-w-0">

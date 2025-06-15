@@ -1,19 +1,27 @@
 const BlogPost = require("../models/BlogPost");
 const Comment = require("../models/Comment");
+const User = require("../models/User");
 
 // @desc   Dashboard Summary
 // @route  POST /api/dashboard-summary
 // @access Private (Admin Only)
 const getDashboardSummary = async (req, res) => {
   try {
-    const [totalPosts, drafts, published, totalComments, aiGenerated] =
-      await Promise.all([
-        BlogPost.countDocuments(),
-        BlogPost.countDocuments({ isDraft: true }),
-        BlogPost.countDocuments({ isDraft: false }),
-        Comment.countDocuments(),
-        BlogPost.countDocuments({ generatedByAI: true }),
-      ]);
+    const [
+      totalPosts,
+      drafts,
+      published,
+      totalComments,
+      aiGenerated,
+      totalUsers,
+    ] = await Promise.all([
+      BlogPost.countDocuments(),
+      BlogPost.countDocuments({ isDraft: true }),
+      BlogPost.countDocuments({ isDraft: false }),
+      Comment.countDocuments(),
+      BlogPost.countDocuments({ generatedByAI: true }),
+      User.countDocuments(),
+    ]);
 
     const totalViewsAgg = await BlogPost.aggregate([
       { $group: { _id: null, total: { $sum: "$views" } } },
@@ -50,6 +58,7 @@ const getDashboardSummary = async (req, res) => {
         totalViews,
         totalLikes,
         totalComments,
+        totalUsers,
         aiGenerated,
       },
       topPosts,
