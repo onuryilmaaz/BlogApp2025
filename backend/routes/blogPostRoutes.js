@@ -5,6 +5,7 @@ const {
   updatePost,
   deletePost,
   getAllPosts,
+  reviewPost,
   getPostBySlug,
   getPostsByTags,
   searchPosts,
@@ -12,22 +13,21 @@ const {
   likePost,
   getTopPosts,
 } = require("../controllers/blogPostController");
-const { protect } = require("../middlewares/authMiddleware");
-
-// Admin-only middleware
-const adminOnly = (req, res, next) => {
-  if (req.user && req.user.role == "Admin") {
-    next();
-  } else {
-    res.status(403).json({ message: "Admin access only" });
-  }
-};
+const { protect, adminOnly } = require("../middlewares/authMiddleware");
+const { validateMongoId } = require("../middlewares/validation");
 
 router.post("/", protect, adminOnly, createPost);
 router.get("/", getAllPosts);
 router.get("/slug/:slug", getPostBySlug);
 router.put("/:id", protect, adminOnly, updatePost);
 router.delete("/:id", protect, adminOnly, deletePost);
+router.put(
+  "/:id/review",
+  protect,
+  adminOnly,
+  validateMongoId("id"),
+  reviewPost
+);
 router.get("/tag/:tag", getPostsByTags);
 router.get("/search", searchPosts);
 router.post("/:id/view", incrementView);

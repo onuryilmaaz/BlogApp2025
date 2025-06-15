@@ -7,12 +7,27 @@ const morgan = require("morgan");
 const connectDB = require("./config/db");
 const logger = require("./config/logger");
 const { generalLimiter } = require("./middlewares/rateLimiter");
+const { cacheMiddleware } = require("./middlewares/cacheMiddleware");
+const {
+  compressionMiddleware,
+  performanceMonitor,
+  optimizeResponse,
+} = require("./middlewares/performanceMiddleware");
 
 const authRoutes = require("./routes/authRoutes");
 const blogPostRoutes = require("./routes/blogPostRoutes");
 const commentsRoutes = require("./routes/commentRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const aiRoutes = require("./routes/aiRoutes");
+const tagRoutes = require("./routes/tagRoutes");
+const searchRoutes = require("./routes/searchRoutes");
+const userRoutes = require("./routes/userRoutes");
+
+// Import error handling middleware
+const {
+  errorHandler,
+  notFoundHandler,
+} = require("./middlewares/errorMiddleware");
 
 const app = express();
 
@@ -24,6 +39,11 @@ app.use(
     contentSecurityPolicy: false, // Disable CSP for development
   })
 );
+
+// Apply performance middleware (compression, etc.)
+app.use(compressionMiddleware);
+// app.use(performanceMonitor);
+// app.use(optimizeResponse);
 
 // Apply general rate limiting to all requests
 app.use(generalLimiter);
@@ -57,6 +77,9 @@ app.use("/api/posts", blogPostRoutes);
 app.use("/api/comments", commentsRoutes);
 app.use("/api/dashboard-summary", dashboardRoutes);
 app.use("/api/ai", aiRoutes);
+app.use("/api/tags", tagRoutes);
+app.use("/api/search", searchRoutes);
+app.use("/api/users", userRoutes);
 
 // Server Uploads folder with CORS headers
 app.use(
@@ -95,28 +118,11 @@ app.use(
   })
 );
 
-// Global error handler
-app.use((err, req, res, next) => {
-  logger.error("Unhandled error:", {
-    error: err.message,
-    stack: err.stack,
-    url: req.url,
-    method: req.method,
-    ip: req.ip,
-  });
+// 404 handler (must be before error handler)
+app.use(notFoundHandler);
 
-  res.status(err.status || 500).json({
-    message:
-      process.env.NODE_ENV === "production"
-        ? "Something went wrong!"
-        : err.message,
-  });
-});
-
-// Handle 404 routes
-app.use("*", (req, res) => {
-  res.status(404).json({ message: "Route not found" });
-});
+// Global error handler (must be last middleware)
+app.use(errorHandler);
 
 // Start Server
 const PORT = process.env.PORT || 5000;

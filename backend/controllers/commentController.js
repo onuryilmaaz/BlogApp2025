@@ -107,6 +107,72 @@ const getCommentsByPost = async (req, res) => {
   }
 };
 
+// @desc   Update a comment (author or admin only)
+// @route  PUT /api/comments/:commentId
+// @access Private
+const updateComment = async (req, res) => {
+  try {
+    const { commentId } = req.params;
+    const { content } = req.body;
+    const userId = req.user._id;
+    const userRole = req.user.role;
+
+    const comment = await Comment.findById(commentId).populate("author", "_id");
+    if (!comment) {
+      return res.status(404).json({ message: "Comment not found" });
+    }
+
+    // Check if user is the author of the comment or an admin
+    const isAuthor = comment.author._id.toString() === userId.toString();
+    const isAdmin = userRole === "Admin";
+
+    if (!isAuthor && !isAdmin) {
+      return res.status(403).json({
+        message:
+          "Access denied. You can only edit your own comments or you must be an admin.",
+      });
+    }
+
+    // Update the comment
+    comment.content = content;
+    const updatedComment = await comment.save();
+    await updatedComment.populate("author", "name profileImageUrl");
+
+    res.json(updatedComment);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Failed to update comment", error: error.message });
+  }
+};
+
+// @desc   Like a comment
+// @route  POST /api/comments/:commentId/like
+// @access Private
+const likeComment = async (req, res) => {
+  try {
+    const { commentId } = req.params;
+
+    const comment = await Comment.findById(commentId);
+    if (!comment) {
+      return res.status(404).json({ message: "Comment not found" });
+    }
+
+    // Increment the likes count
+    comment.likes += 1;
+    await comment.save();
+
+    res.json({
+      message: "Comment liked successfully",
+      likes: comment.likes,
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Failed to like comment", error: error.message });
+  }
+};
+
 // @desc   Delete a comment and its replies (author or admin only)
 // @route  DELETE /api/comments/:commentId
 // @access Private
@@ -148,5 +214,7 @@ module.exports = {
   addComment,
   getAllComments,
   getCommentsByPost,
+  updateComment,
+  likeComment,
   deleteComment,
 };

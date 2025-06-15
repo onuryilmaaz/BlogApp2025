@@ -19,6 +19,14 @@ const Dashboard = lazy(() => import("./pages/Admin/Dashboard"));
 const BlogPosts = lazy(() => import("./pages/Admin/BlogPosts"));
 const BlogPostEditor = lazy(() => import("./pages/Admin/BlogPostEditor"));
 const Comments = lazy(() => import("./pages/Admin/Comments"));
+const UserManagement = lazy(() => import("./pages/Admin/UserManagement"));
+
+// Lazy load auth components
+const ForgotPassword = lazy(() => import("./pages/Auth/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/Auth/ResetPassword"));
+
+// Lazy load user components
+const UserProfile = lazy(() => import("./pages/User/UserProfile"));
 
 import PrivateRoute from "./routes/PrivateRoute";
 
@@ -155,10 +163,25 @@ const App = () => {
                 <Route path="/tag/:tagName" element={<PostByTags />} />
                 <Route path="/search" element={<SearchPosts />} />
 
+                {/* Auth Routes */}
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+
+                {/* User Routes */}
+                <Route
+                  path="/profile"
+                  element={
+                    <PrivateRoute allowedRoles={["Admin", "Member"]}>
+                      <UserProfile />
+                    </PrivateRoute>
+                  }
+                />
+
                 {/* Admin Routes */}
                 <Route element={<PrivateRoute allowedRoles={["Admin"]} />} />
                 <Route path="/admin/dashboard" element={<Dashboard />} />
                 <Route path="/admin/posts" element={<BlogPosts />} />
+                <Route path="/admin/users" element={<UserManagement />} />
                 <Route path="/admin/create" element={<BlogPostEditor />} />
                 <Route
                   path="/admin/edit/:postSlug"

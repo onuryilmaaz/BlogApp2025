@@ -6,6 +6,15 @@ export const API_PATHS = {
     LOGIN: "/api/auth/login",
     GET_PROFILE: "/api/auth/profile",
     GET_USER_INFO: "/api/auth/profile",
+    UPDATE_PROFILE: "/api/auth/profile",
+    FORGOT_PASSWORD: "/api/auth/forgot-password",
+    RESET_PASSWORD: "/api/auth/reset-password/:token",
+  },
+  USERS: {
+    GET_ALL: "/api/users",
+    GET_BY_ID: (id) => `/api/users/${id}`,
+    UPDATE: (id) => `/api/users/${id}`,
+    DELETE: (id) => `/api/users/${id}`,
   },
   IMAGE: {
     UPLOAD_IMAGE: "/api/auth/upload-image",
@@ -36,5 +45,7 @@ export const API_PATHS = {
     GET_ALL: "/api/comments",
     GET_ALL_BY_POST: (postId) => `/api/comments/${postId}`,
     DELETE: (commentId) => `/api/comments/${commentId}`,
+    UPDATE: (commentId) => `/api/comments/${commentId}`,
+    LIKE: (commentId) => `/api/comments/${commentId}/like`,
   },
 };

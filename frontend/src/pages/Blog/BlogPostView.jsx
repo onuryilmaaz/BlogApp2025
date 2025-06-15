@@ -393,7 +393,9 @@ const BlogPostView = React.memo(() => {
                     commentId={comment._id || null}
                     authorName={comment.author?.name}
                     authorPhoto={comment.author?.profileImageUrl}
+                    authorId={comment.author?._id}
                     content={comment.content}
+                    likes={comment.likes || 0}
                     updatedOn={
                       comment.updatedAt
                         ? moment(comment.updatedAt).format("Do MMM YYYY")

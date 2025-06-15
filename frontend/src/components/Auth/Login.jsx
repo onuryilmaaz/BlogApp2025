@@ -111,6 +111,16 @@ const Login = React.memo(({ setCurrentPage }) => {
             error={errors.password}
           />
 
+          <div className="flex justify-end mb-4">
+            <button
+              type="button"
+              className="text-xs text-primary hover:underline cursor-pointer"
+              onClick={() => navigate("/forgot-password")}
+            >
+              Forgot Password?
+            </button>
+          </div>
+
           {errors.general && (
             <p className="text-red-500 text-xs pb-2.5">{errors.general}</p>
           )}

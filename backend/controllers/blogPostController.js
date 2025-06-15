@@ -23,6 +23,7 @@ const createPost = async (req, res) => {
       author: req.user._id,
       isDraft,
       generatedByAI,
+      needsReview: generatedByAI ? true : false,
     });
 
     await newPost.save();
@@ -83,19 +84,26 @@ const deletePost = async (req, res) => {
 };
 
 // @desc   Get blog post by status (all,published or draft) and include counts
-// @route  GET /api/posts?status=published|draft|all&page=1
-// @access Public
+// @route  GET /api/posts?status=published|draft|all|pendingReview&page=1
+// @access Public for published, Private/Admin for others
 const getAllPosts = async (req, res) => {
   try {
-    const status = req.query.status || "published";
+    const status = req.query.status || "all";
     const page = parseInt(req.query.page) || 1;
     const limit = 5;
     const skip = (page - 1) * limit;
 
     // Determine filter for main posts response
     let filter = {};
-    if (status === "published") filter.isDraft = false;
-    else if (status === "draft") filter.isDraft = true;
+    if (status === "published") {
+      filter.isDraft = false;
+      filter.needsReview = false;
+    } else if (status === "draft") {
+      filter.isDraft = true;
+    } else if (status === "pendingReview") {
+      filter.needsReview = true;
+    }
+    // For status === "all", filter remains empty to get all posts
 
     // Fetch paginated posts
     const posts = await BlogPost.find(filter)
@@ -105,13 +113,19 @@ const getAllPosts = async (req, res) => {
       .limit(limit);
 
     // Count totals for pagination and tab counts
-    const [totalCount, allCount, publishedCount, draftCount] =
-      await Promise.all([
-        BlogPost.countDocuments(filter),
-        BlogPost.countDocuments(),
-        BlogPost.countDocuments({ isDraft: false }),
-        BlogPost.countDocuments({ isDraft: true }),
-      ]);
+    const [
+      totalCount,
+      allCount,
+      publishedCount,
+      draftCount,
+      pendingReviewCount,
+    ] = await Promise.all([
+      BlogPost.countDocuments(filter),
+      BlogPost.countDocuments(),
+      BlogPost.countDocuments({ isDraft: false, needsReview: false }),
+      BlogPost.countDocuments({ isDraft: true }),
+      BlogPost.countDocuments({ needsReview: true }),
+    ]);
 
     res.json({
       posts,
@@ -122,8 +136,41 @@ const getAllPosts = async (req, res) => {
         all: allCount,
         published: publishedCount,
         draft: draftCount,
+        pendingReview: pendingReviewCount,
       },
     });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// @desc   Review a blog post (approve or reject)
+// @route  PUT /api/posts/:id/review
+// @access Private/Admin
+const reviewPost = async (req, res) => {
+  try {
+    const { approve } = req.body;
+    const postId = req.params.id;
+
+    const post = await BlogPost.findById(postId);
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    if (approve === true) {
+      // Approve the post
+      post.needsReview = false;
+      await post.save();
+      res.json({ message: "Post approved successfully", post });
+    } else if (approve === false) {
+      // Reject and delete the post
+      await BlogPost.findByIdAndDelete(postId);
+      res.json({ message: "Post rejected and deleted successfully" });
+    } else {
+      res
+        .status(400)
+        .json({ message: "Invalid approve value. Must be true or false." });
+    }
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
@@ -134,10 +181,10 @@ const getAllPosts = async (req, res) => {
 // @access Public
 const getPostBySlug = async (req, res) => {
   try {
-    const post = await BlogPost.findOne({ slug: req.params.slug }).populate(
-      "author",
-      "name profileImageUrl"
-    );
+    const post = await BlogPost.findOne({
+      slug: req.params.slug,
+    }).populate("author", "name profileImageUrl");
+
     if (!post) return res.status(404).json({ message: "Post not found" });
     res.json(post);
   } catch (error) {
@@ -152,7 +199,6 @@ const getPostsByTags = async (req, res) => {
   try {
     const posts = await BlogPost.find({
       tags: req.params.tag,
-      isDraft: false,
     }).populate("author", "name profileImageUrl");
     res.json(posts);
   } catch (error) {
@@ -167,7 +213,6 @@ const searchPosts = async (req, res) => {
   try {
     const q = req.query.q;
     const posts = await BlogPost.find({
-      isDraft: false,
       $or: [
         { title: { $regex: q, $options: "i" } },
         { content: { $regex: q, $options: "i" } },
@@ -208,7 +253,8 @@ const likePost = async (req, res) => {
 // @access Public
 const getTopPosts = async (req, res) => {
   try {
-    const posts = await BlogPost.find({ isDraft: false })
+    const posts = await BlogPost.find({})
+      .populate("author", "name profileImageUrl")
       .sort({
         views: -1,
         likes: -1,
@@ -225,6 +271,7 @@ module.exports = {
   updatePost,
   deletePost,
   getAllPosts,
+  reviewPost,
   getPostBySlug,
   getPostsByTags,
   searchPosts,

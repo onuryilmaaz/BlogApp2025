@@ -172,6 +172,100 @@ const validateMongoId = (paramName) => [
   handleValidationErrors,
 ];
 
+// Password reset validation rules
+const validateForgotPassword = [
+  body("email")
+    .isEmail()
+    .normalizeEmail()
+    .withMessage("Please provide a valid email address"),
+
+  handleValidationErrors,
+];
+
+const validateResetPassword = [
+  body("password")
+    .isLength({ min: 6, max: 128 })
+    .withMessage("Password must be between 6 and 128 characters")
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+    .withMessage(
+      "Password must contain at least one lowercase letter, one uppercase letter, and one number"
+    ),
+
+  param("token").notEmpty().withMessage("Reset token is required"),
+
+  handleValidationErrors,
+];
+
+// Profile update validation rules
+const validateProfileUpdate = [
+  body("name")
+    .optional()
+    .trim()
+    .isLength({ min: 2, max: 50 })
+    .withMessage("Name must be between 2 and 50 characters")
+    .matches(/^[a-zA-Z\s]+$/)
+    .withMessage("Name can only contain letters and spaces"),
+
+  body("bio")
+    .optional()
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage("Bio cannot exceed 500 characters"),
+
+  body("profileImageUrl")
+    .optional()
+    .isURL()
+    .withMessage("Profile image must be a valid URL"),
+
+  handleValidationErrors,
+];
+
+// Comment update validation rules
+const validateCommentUpdate = [
+  body("content")
+    .trim()
+    .isLength({ min: 1, max: 1000 })
+    .withMessage("Comment must be between 1 and 1000 characters")
+    .escape(), // Sanitize HTML entities
+
+  handleValidationErrors,
+];
+
+// User update validation rules (for admin)
+const validateUserUpdate = [
+  body("name")
+    .optional()
+    .trim()
+    .isLength({ min: 2, max: 50 })
+    .withMessage("Name must be between 2 and 50 characters")
+    .matches(/^[a-zA-Z\s]+$/)
+    .withMessage("Name can only contain letters and spaces"),
+
+  body("email")
+    .optional()
+    .isEmail()
+    .normalizeEmail()
+    .withMessage("Please provide a valid email address"),
+
+  body("bio")
+    .optional()
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage("Bio cannot exceed 500 characters"),
+
+  body("profileImageUrl")
+    .optional()
+    .isURL()
+    .withMessage("Profile image must be a valid URL"),
+
+  body("role")
+    .optional()
+    .isIn(["Admin", "Member"])
+    .withMessage("Role must be either Admin or Member"),
+
+  handleValidationErrors,
+];
+
 module.exports = {
   validateRegister,
   validateLogin,
@@ -179,5 +273,10 @@ module.exports = {
   validateComment,
   validateAIGeneration,
   validateMongoId,
+  validateForgotPassword,
+  validateResetPassword,
+  validateProfileUpdate,
+  validateCommentUpdate,
+  validateUserUpdate,
   handleValidationErrors,
 };

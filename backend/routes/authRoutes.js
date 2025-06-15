@@ -3,8 +3,14 @@ const {
   registerUser,
   loginUser,
   getUserProfile,
+  forgotPassword,
+  resetPassword,
+  updateProfile,
+  getAllUsers,
+  updateUser,
+  deleteUser,
 } = require("../controllers/authController");
-const { protect } = require("../middlewares/authMiddleware");
+const { protect, adminOnly } = require("../middlewares/authMiddleware");
 const {
   upload,
   optimizeImage,
@@ -14,6 +20,11 @@ const { authLimiter } = require("../middlewares/rateLimiter");
 const {
   validateRegister,
   validateLogin,
+  validateForgotPassword,
+  validateResetPassword,
+  validateProfileUpdate,
+  validateUserUpdate,
+  validateMongoId,
 } = require("../middlewares/validation");
 
 const router = express.Router();
@@ -22,6 +33,39 @@ const router = express.Router();
 router.post("/register", authLimiter, validateRegister, registerUser);
 router.post("/login", authLimiter, validateLogin, loginUser);
 router.get("/profile", protect, getUserProfile);
+router.put("/profile", protect, validateProfileUpdate, updateProfile);
+
+// Password reset routes
+router.post(
+  "/forgot-password",
+  authLimiter,
+  validateForgotPassword,
+  forgotPassword
+);
+router.post(
+  "/reset-password/:token",
+  authLimiter,
+  validateResetPassword,
+  resetPassword
+);
+
+// User management routes (Admin only)
+router.get("/users", protect, adminOnly, getAllUsers);
+router.put(
+  "/users/:id",
+  protect,
+  adminOnly,
+  validateMongoId("id"),
+  validateUserUpdate,
+  updateUser
+);
+router.delete(
+  "/users/:id",
+  protect,
+  adminOnly,
+  validateMongoId("id"),
+  deleteUser
+);
 
 router.post(
   "/upload-image",

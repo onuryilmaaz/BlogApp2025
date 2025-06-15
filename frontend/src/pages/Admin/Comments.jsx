@@ -151,7 +151,9 @@ const Comments = () => {
               commentId={comment._id || null}
               authorName={comment.author?.name || "Anonymous"}
               authorPhoto={comment.author?.profileImageUrl}
+              authorId={comment.author?._id}
               content={comment.content || "No content"}
+              likes={comment.likes || 0}
               updatedOn={
                 comment.updatedAt
                   ? moment(comment.updatedAt).format("Do MMM YYYY")

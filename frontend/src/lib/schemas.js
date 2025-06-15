@@ -43,6 +43,58 @@ export const signUpSchema = z.object({
   adminAccessToken: z.string().optional(),
 });
 
+// User profile update schema
+export const userUpdateSchema = z.object({
+  name: z
+    .string()
+    .min(1, "Name is required")
+    .min(2, "Name must be at least 2 characters")
+    .max(50, "Name must be less than 50 characters")
+    .regex(
+      /^[a-zA-ZğüşıöçĞÜŞİÖÇ\s]+$/,
+      "Name can only contain letters and spaces"
+    ),
+  bio: z.string().max(500, "Bio must be less than 500 characters").optional(),
+  profileImageUrl: z
+    .string()
+    .url("Please enter a valid URL")
+    .optional()
+    .or(z.literal("")),
+});
+
+// Password reset schemas
+export const forgotPasswordSchema = z.object({
+  email: z
+    .string()
+    .min(1, "Email is required")
+    .email("Please enter a valid email address"),
+});
+
+export const resetPasswordSchema = z
+  .object({
+    password: z
+      .string()
+      .min(6, "Password must be at least 6 characters")
+      .max(128, "Password must be less than 128 characters")
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+        "Password must contain at least one lowercase letter, one uppercase letter, and one number"
+      ),
+    confirmPassword: z.string().min(1, "Please confirm your password"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
+
+// Comment update schema
+export const commentUpdateSchema = z.object({
+  content: z
+    .string()
+    .min(1, "Comment cannot be empty")
+    .max(1000, "Comment must be less than 1000 characters"),
+});
+
 // Blog post schemas
 export const blogPostSchema = z.object({
   title: z
