@@ -116,7 +116,7 @@ const BlogPostEditor = ({ isEdit }) => {
         coverImageUrl,
         tags: postData.tags,
         isDraft: isDraft ? true : false,
-        generatedByAI: true,
+        generatedByAI: postData.generatedByAI || false,
       };
 
       const response = isEdit

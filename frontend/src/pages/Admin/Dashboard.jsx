@@ -17,7 +17,6 @@ import {
   LuTrendingUp,
   LuTrendingDown,
   LuClock,
-  LuBot,
   LuShield,
   LuCalendar,
 } from "react-icons/lu";
@@ -49,7 +48,6 @@ const Dashboard = () => {
         API_PATHS.DASHBOARD.GET_DASHBOARD_DATA
       );
 
-
       if (response.data) {
         setDashboardData(response.data);
 
@@ -57,7 +55,6 @@ const Dashboard = () => {
 
         const totalViews = Math.max(...topPosts.map((p) => p.views || 0), 1);
         setMaxViews(totalViews);
-
       }
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
@@ -152,8 +149,8 @@ const Dashboard = () => {
           Manage Users
         </button>
         <button className="bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-lg p-3 text-sm font-medium transition-colors">
-          <LuBot className="w-4 h-4 mb-1 mx-auto" />
-          AI Review
+          <LuShield className="w-4 h-4 mb-1 mx-auto" />
+          Manage Tags
         </button>
         <button className="bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-lg p-3 text-sm font-medium transition-colors">
           <LuChartLine className="w-4 h-4 mb-1 mx-auto" />
@@ -398,29 +395,6 @@ const Dashboard = () => {
               isPositive={true}
             />
           </div>
-
-          {/* Content Moderation Alert */}
-          {dashboardData?.stats?.pendingReview > 0 && (
-            <div className="bg-orange-50 border border-orange-200 rounded-xl p-6 mt-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-orange-100 rounded-lg">
-                  <LuBot className="w-5 h-5 text-orange-600" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-orange-900">
-                    AI Content Review Required
-                  </h3>
-                  <p className="text-sm text-orange-700 mt-1">
-                    {dashboardData.stats.pendingReview} AI-generated posts are
-                    waiting for your review
-                  </p>
-                </div>
-                <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                  Review Now
-                </button>
-              </div>
-            </div>
-          )}
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
             {/* Left Column */}

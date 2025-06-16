@@ -16,7 +16,6 @@ const TrendingPostSection = React.memo(() => {
         API_PATHS.POSTS.GET_TRENDING_POST
       );
 
-
       // Handle different response structures
       let posts = [];
       if (response.data.posts) {
@@ -28,8 +27,8 @@ const TrendingPostSection = React.memo(() => {
         posts = [];
       }
 
-      // Filter out draft posts and posts that need review for public view
-      posts = posts.filter((post) => !post.isDraft && !post.needsReview);
+      // Filter out draft posts for public view
+      posts = posts.filter((post) => !post.isDraft);
 
       setPostList(posts);
       setError(null);

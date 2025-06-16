@@ -321,33 +321,6 @@ export const useIncrementView = () => {
   });
 };
 
-// Review post (approve/reject)
-export const useReviewPost = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ postId, approve }) => {
-      const response = await apiRequest(`${API_PATHS.POSTS.REVIEW}/${postId}`, {
-        method: "PUT",
-        data: { approve },
-      });
-      return response.data;
-    },
-    onSuccess: (data, variables) => {
-      // Invalidate pending posts and all posts
-      invalidateQueries.allPosts();
-      invalidateQueries.dashboard();
-
-      const action = variables.approve ? "approved" : "rejected";
-      toast.success(`Post ${action} successfully!`);
-    },
-    onError: (error) => {
-      const message = error.response?.data?.message || "Failed to review post";
-      toast.error(message);
-    },
-  });
-};
-
 // Prefetch related posts
 export const usePrefetchRelatedPosts = () => {
   const queryClient = useQueryClient();

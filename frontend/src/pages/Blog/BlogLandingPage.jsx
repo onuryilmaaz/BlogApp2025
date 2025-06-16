@@ -29,7 +29,6 @@ const BlogLandingPage = () => {
         `${API_PATHS.POSTS.GET_ALL}?page=${page}`
       );
 
-
       // Handle different response structures
       let posts = [];
       let pagination = {};
@@ -52,8 +51,8 @@ const BlogLandingPage = () => {
         pagination = { page: 1, totalPages: 1, totalCount: 0 };
       }
 
-      // Filter out draft posts and posts that need review for public view
-      posts = posts.filter((post) => !post.isDraft && !post.needsReview);
+      // Filter out draft posts for public view
+      posts = posts.filter((post) => !post.isDraft);
 
       if (append) {
         setBlogPostList((prev) => [...prev, ...posts]);

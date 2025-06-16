@@ -40,7 +40,6 @@ const createPost = async (req, res) => {
       author: req.user._id,
       isDraft,
       generatedByAI,
-      needsReview: generatedByAI ? true : false,
     });
 
     await newPost.save();
@@ -94,7 +93,7 @@ const deletePost = async (req, res) => {
 };
 
 // @desc   Get blog post by status (all,published or draft) and include counts
-// @route  GET /api/posts?status=published|draft|all|pendingReview&page=1
+// @route  GET /api/posts?status=published|draft|all&page=1
 // @access Public for published, Private/Admin for others
 const getAllPosts = async (req, res) => {
   try {

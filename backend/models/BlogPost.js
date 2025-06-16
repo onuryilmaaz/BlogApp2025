@@ -23,7 +23,6 @@ const BlogPostSchema = new mongoose.Schema(
       },
     ],
     generatedByAI: { type: Boolean, default: false },
-    needsReview: { type: Boolean, default: false },
   },
   {
     timestamps: true,
@@ -38,7 +37,6 @@ BlogPostSchema.index({ views: -1 }); // For trending posts
 BlogPostSchema.index({ likes: -1 }); // For popular posts
 BlogPostSchema.index({ author: 1, createdAt: -1 }); // For author's posts
 BlogPostSchema.index({ isDraft: 1, createdAt: -1 }); // For published posts
-BlogPostSchema.index({ needsReview: 1, createdAt: -1 }); // For posts pending review
 BlogPostSchema.index({ title: "text", content: "text" }); // For text search
 
 // Pre-save middleware to handle slug generation and tag management
