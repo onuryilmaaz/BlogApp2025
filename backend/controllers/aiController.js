@@ -195,7 +195,6 @@ const generatePostSummary = async (req, res) => {
     });
 
     let rawText = response.text;
-    logger.info(`AI Summary Response: ${rawText.substring(0, 200)}...`);
 
     // Clean the response more thoroughly
     const cleanedText = rawText
