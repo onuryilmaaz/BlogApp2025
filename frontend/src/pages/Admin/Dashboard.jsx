@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import DashboardLayout from "../../components/layouts/DashboardLayout";
 import useUserStore from "../../stores/userStore";
-//import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../utils/axiosInstance";
 import { API_PATHS } from "../../utils/apiPaths";
 import moment from "moment";
@@ -19,15 +19,19 @@ import {
   LuClock,
   LuShield,
   LuCalendar,
+  LuFileText,
+  LuSettings,
+  LuPlus,
 } from "react-icons/lu";
 import DashboardSummaryCard from "../../components/Cards/DashboardSummaryCard";
 import TagInsights from "../../components/Cards/TagInsights";
 import TopPostCard from "../../components/Cards/TopPostCard";
 import RecentCommentsList from "../../components/Cards/RecentCommentsList";
+import useQuickActions from "../../hooks/useQuickActions.jsx";
 
 const Dashboard = () => {
   const user = useUserStore((state) => state.user);
-  //const navigate = useNavigate();
+  const navigate = useNavigate();
 
   const [dashboardData, setDashboardData] = useState(null);
   const [maxViews, setMaxViews] = useState(0);
@@ -135,30 +139,51 @@ const Dashboard = () => {
     </div>
   );
 
-  // Quick Actions Widget
-  const QuickActionsWidget = () => (
-    <div className="bg-gradient-to-r from-sky-500 to-cyan-400 p-6 rounded-xl text-white">
-      <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
-      <div className="grid grid-cols-2 gap-3">
-        <button className="bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-lg p-3 text-sm font-medium transition-colors">
-          <LuGalleryVerticalEnd className="w-4 h-4 mb-1 mx-auto" />
-          New Post
-        </button>
-        <button className="bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-lg p-3 text-sm font-medium transition-colors">
-          <LuUsers className="w-4 h-4 mb-1 mx-auto" />
-          Manage Users
-        </button>
-        <button className="bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-lg p-3 text-sm font-medium transition-colors">
-          <LuShield className="w-4 h-4 mb-1 mx-auto" />
-          Manage Tags
-        </button>
-        <button className="bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-lg p-3 text-sm font-medium transition-colors">
-          <LuChartLine className="w-4 h-4 mb-1 mx-auto" />
-          Analytics
-        </button>
+  // Dynamic Quick Actions Widget
+  const QuickActionsWidget = () => {
+    const { getTopActions, executeAction } = useQuickActions(dashboardData);
+    const topActions = getTopActions(6);
+
+    return (
+      <div className="bg-gradient-to-r from-sky-500 to-cyan-400 p-6 rounded-xl text-white">
+        <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
+        <div className="grid grid-cols-2 gap-3">
+          {topActions.map((action) => (
+            <button
+              key={action.id}
+              onClick={() => executeAction(action)}
+              className="relative bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-lg p-3 text-sm font-medium transition-all duration-200 hover:scale-105 group"
+              title={action.description}
+            >
+              <div className="flex flex-col items-center">
+                <div className="mb-1 group-hover:scale-110 transition-transform duration-200">
+                  {action.icon}
+                </div>
+                <span className="text-center leading-tight">
+                  {action.title}
+                </span>
+                {action.badge > 0 && (
+                  <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                    {action.badge > 99 ? "99+" : action.badge}
+                  </div>
+                )}
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {/* Show more actions if available */}
+        {topActions.length >= 6 && (
+          <button
+            onClick={() => navigate("/admin")}
+            className="w-full mt-3 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-lg p-2 text-xs font-medium transition-colors"
+          >
+            View More Actions
+          </button>
+        )}
       </div>
-    </div>
-  );
+    );
+  };
 
   // Activity Timeline Widget
   const ActivityTimelineWidget = ({ activities = [] }) => (
@@ -400,7 +425,10 @@ const Dashboard = () => {
             {/* Left Column */}
             <div className="lg:col-span-8 space-y-6">
               {/* Tag Insights */}
-              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+              <div
+                className="bg-white p-6 rounded-xl shadow-sm border border-gray-100"
+                data-analytics
+              >
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-semibold flex items-center gap-2">
                     <LuChartLine className="w-5 h-5 text-blue-500" />
